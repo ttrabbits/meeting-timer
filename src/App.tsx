@@ -2,6 +2,8 @@ import { useTimer } from './hooks/useTimer';
 import { TimerDisplay } from './components/TimerDisplay';
 import { TimerControls } from './components/TimerControls';
 import { AgendaManager } from './components/AgendaManager';
+import { Button } from '@/components/ui/button';
+import { BellRing } from 'lucide-react';
 
 const DEFAULT_AGENDA = [
   { id: '1', title: 'Aさん', durationSeconds: 5 * 60 },
@@ -54,6 +56,17 @@ function App() {
             hasMore={hasMore}
             hasPrev={hasPrev}
           />
+
+          <div className="mt-6">
+            <Button
+              size="icon"
+              className="h-16 w-16 rounded-full bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 active:scale-95 transition-all shadow-lg"
+              onClick={playBell}
+              aria-label="音を鳴らす"
+            >
+              <BellRing className="h-7 w-7 fill-current" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -71,7 +84,6 @@ function App() {
           remainingSeconds={remainingSeconds}
           isSoundEnabled={isSoundEnabled}
           onSoundToggle={setSoundEnabled}
-          onPlayBell={playBell}
           overtimeReminderMinutes={overtimeReminderMinutes}
           onOvertimeReminderChange={setOvertimeReminderMinutes}
         />

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { CheckCircle2, Circle, Plus, Clock, Play, Pause, Volume2, VolumeX, BellRing, AlarmClock, X } from 'lucide-react';
+import { CheckCircle2, Circle, Plus, Clock, Play, Pause, X, Volume2, VolumeX, AlarmClock } from 'lucide-react';
 import { DndContext, closestCenter, type DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -23,7 +23,6 @@ interface AgendaManagerProps {
     remainingSeconds?: number;
     isSoundEnabled: boolean;
     onSoundToggle: (enabled: boolean) => void;
-    onPlayBell: () => void;
     overtimeReminderMinutes: number | null;
     onOvertimeReminderChange: (minutes: number | null) => void;
 }
@@ -40,23 +39,12 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
     remainingSeconds = 0,
     isSoundEnabled,
     onSoundToggle,
-    onPlayBell,
     overtimeReminderMinutes,
     onOvertimeReminderChange,
 }) => {
     const [newTitle, setNewTitle] = useState('');
     const [newMinutes, setNewMinutes] = useState(5);
     const [newSeconds, setNewSeconds] = useState(0);
-    const isReminderEnabled = overtimeReminderMinutes !== null;
-
-    const handleReminderToggle = (enabled: boolean) => {
-        if (enabled) {
-            const defaultMinutes = overtimeReminderMinutes && overtimeReminderMinutes > 0 ? overtimeReminderMinutes : 5;
-            onOvertimeReminderChange(defaultMinutes);
-        } else {
-            onOvertimeReminderChange(null);
-        }
-    };
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -287,14 +275,11 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
                         <div className="h-9 w-9 rounded-full bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
                             <Clock className="h-4.5 w-4.5 text-blue-200" />
                         </div>
-                        <div>
-                            <p className="text-sm font-semibold text-white leading-tight">予定リスト</p>
-                            <p className="text-[10px] text-zinc-500">担当者と持ち時間を管理</p>
-                        </div>
+                        <p className="text-sm font-semibold text-white leading-tight">予定リスト</p>
                     </div>
-                    <div className="flex items-center gap-1 text-[10px] text-zinc-500">
+                    <div className="flex items-center gap-1 text-[10px] text-zinc-400">
                         <span className="h-2 w-2 rounded-full bg-emerald-400/80 inline-block" />
-                        <span>{agenda.length} items</span>
+                        <span>{agenda.length}</span>
                     </div>
                 </div>
             </div>
@@ -328,26 +313,26 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
             {/* Bottom Fixed Area (Add Form + Settings) */}
             <div className="p-4 bg-zinc-950/90 backdrop-blur-md border-t border-zinc-900 space-y-3 shadow-[0_-10px_20px_rgba(0,0,0,0.45)]">
                 {/* Add New */}
-                <Card className="bg-zinc-900/70 border-zinc-800">
-                    <CardHeader className="pb-2">
+                <Card className="bg-gradient-to-br from-zinc-900 via-zinc-900/80 to-zinc-950 border-zinc-800">
+                    <CardHeader className="pb-0 flex flex-row items-center justify-between space-y-0 px-4 pt-4">
                         <CardTitle className="text-sm text-white">議題を追加</CardTitle>
                     </CardHeader>
-                    <CardContent className="pt-0">
+                    <CardContent className="pt-3 px-4 pb-4 space-y-3">
                         <form onSubmit={addItem} className="space-y-3">
                             <Input
                                 placeholder="議題のタイトルを入力..."
-                                className="h-9 text-sm bg-black/40 border-zinc-800 focus-visible:ring-blue-500/50"
+                                className="h-10 text-sm bg-black/40 border-zinc-800 focus-visible:ring-blue-500/50"
                                 value={newTitle}
                                 onChange={(e) => setNewTitle(e.target.value)}
                                 onPointerDown={(e) => e.stopPropagation()}
                             />
                             <div className="flex items-center gap-3">
-                                <div className="inline-flex items-center gap-1.5 px-3 py-2 bg-black/40 rounded-lg border border-zinc-800">
-                                    <Clock className="h-4 w-4 text-zinc-500" />
+                                <div className="inline-flex items-center gap-2 px-3 py-2 bg-black/40 rounded-lg border border-zinc-800">
+                                    <Clock className="h-4 w-4 text-blue-300" />
                                     <Input
                                         type="number"
                                         min="0"
-                                        className="spinless-number w-14 h-8 px-2 bg-zinc-950/60 border-zinc-800 text-center focus-visible:ring-1 focus-visible:ring-blue-500/40 font-mono text-sm text-zinc-200"
+                                        className="spinless-number w-14 h-9 px-2 bg-zinc-950/60 border-zinc-800 text-center focus-visible:ring-1 focus-visible:ring-blue-500/40 font-mono text-sm text-zinc-200"
                                         value={newMinutes}
                                         onChange={(e) => setNewMinutes(parseInt(e.target.value) || 0)}
                                         onPointerDown={(e) => e.stopPropagation()}
@@ -357,9 +342,9 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
                                         type="number"
                                         min="0"
                                         max="59"
-                                        className="spinless-number w-14 h-8 px-2 bg-zinc-950/60 border-zinc-800 text-center focus-visible:ring-1 focus-visible:ring-blue-500/40 font-mono text-sm text-zinc-200"
+                                        className="spinless-number w-14 h-9 px-2 bg-zinc-950/60 border-zinc-800 text-center focus-visible:ring-1 focus-visible:ring-blue-500/40 font-mono text-sm text-zinc-200"
                                         value={newSeconds}
-                                        onChange={(e) => setNewSeconds(parseInt(e.target.value) || 0)}
+                                    onChange={(e) => setNewSeconds(parseInt(e.target.value) || 0)}
                                         onPointerDown={(e) => e.stopPropagation()}
                                     />
                                     <span className="text-[11px] font-medium text-zinc-500">秒</span>
@@ -367,10 +352,10 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
                                 <Button
                                     type="submit"
                                     size="sm"
-                                    className="flex-1 h-9 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-blue-500/20"
+                                    className="flex-1 h-10 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-blue-500/20"
                                     disabled={!newTitle}
                                 >
-                                    <Plus className="h-3.5 w-3.5 mr-1" /> 追加
+                                    追加
                                 </Button>
                             </div>
                         </form>
@@ -378,66 +363,54 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
                 </Card>
 
                 {/* Settings */}
-                <Card className="bg-zinc-900/70 border-zinc-800">
-                    <CardHeader className="pb-2">
+                <Card className="bg-gradient-to-br from-zinc-900 via-zinc-900/80 to-zinc-950 border-zinc-800">
+                    <CardHeader className="pb-1 px-4 pt-4">
                         <CardTitle className="text-sm text-white">サウンド設定</CardTitle>
                     </CardHeader>
-                    <CardContent className="pt-0 space-y-3">
-                        <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-black/30 px-3 py-3">
+                    <CardContent className="pt-2 pb-4 px-4 space-y-3">
+                        <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-black/30 px-3 py-2.5">
                             <div className="flex items-center gap-3">
                                 <div className={`p-1.5 rounded-lg ${isSoundEnabled ? 'bg-blue-500/15 text-blue-300' : 'bg-zinc-800 text-zinc-500'}`}>
                                     {isSoundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
                                 </div>
-                                <p className="text-[11px] font-semibold text-white">終了時の音</p>
+                                <p className="text-[11px] font-semibold text-white">終了時に音を鳴らす</p>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 self-center min-h-[36px]">
                                 <Switch
                                     checked={isSoundEnabled}
                                     onCheckedChange={onSoundToggle}
                                 />
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-8 text-[11px] border-blue-500/40 text-blue-300 hover:bg-blue-500/10"
-                                onClick={onPlayBell}
-                                onPointerDown={(e) => e.stopPropagation()}
-                            >
-                                    <BellRing className="h-3.5 w-3.5 mr-1" />
-                                    鳴らす
-                                </Button>
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-black/30 px-3 py-3">
+                        <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-black/30 px-3 py-2.5">
                             <div className="flex items-center gap-3">
                                 <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-300">
                                     <AlarmClock className="h-4 w-4" />
                                 </div>
-                                <p className="text-[11px] font-semibold text-white">オーバー後のリマインド</p>
+                                <p className="text-[11px] font-semibold text-white">オーバー後に音を鳴らす</p>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 self-center min-h-[36px]">
                                 <Input
                                     type="number"
                                     min="0"
-                                    className="spinless-number w-20 h-8 bg-zinc-950/60 border-zinc-800 text-sm text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="spinless-number w-16 h-9 bg-zinc-950/60 border-zinc-800 text-sm text-center"
                                     value={overtimeReminderMinutes ?? ''}
-                                    disabled={!isReminderEnabled}
                                     onChange={(e) => {
                                         const value = e.target.value;
                                         const parsed = parseInt(value, 10);
-                                        onOvertimeReminderChange(value === '' || Number.isNaN(parsed) ? null : parsed);
+                                        if (value === '' || Number.isNaN(parsed) || parsed <= 0) {
+                                            onOvertimeReminderChange(null);
+                                        } else {
+                                            onOvertimeReminderChange(parsed);
+                                        }
                                     }}
-                                    placeholder="5"
                                     onPointerDown={(e) => e.stopPropagation()}
                                 />
-                                <span className="text-[11px] text-zinc-400">分後</span>
-                                <Switch
-                                    checked={isReminderEnabled}
-                                    onCheckedChange={(checked) => handleReminderToggle(checked)}
-                                    onPointerDown={(e) => e.stopPropagation()}
-                                />
+                                <span className="text-[11px] text-zinc-400 leading-none">分後</span>
                             </div>
                         </div>
+
                     </CardContent>
                 </Card>
             </div>
