@@ -7,8 +7,9 @@
 
 ## 技術スタック
 
-TypeScript, React, Vite, Tailwind CSS, shadcn/ui
+React, TypeScript, Vite, Tailwind CSS, shadcn/ui
 
 ## ワークフロー
 
 - すべてのやり取りは日本語で行ってください
+- 作業が完了した際は `pnpm build` を実行しビルドが通ることを確認してください

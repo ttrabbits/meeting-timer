@@ -12,4 +12,6 @@ export interface TimerState {
     currentIndex: number;
     agenda: AgendaItem[];
     isSoundEnabled: boolean;
+    overtimeReminderMinutes: number | null;
+    hasOvertimeReminderPlayed: boolean;
 }

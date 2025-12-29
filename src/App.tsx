@@ -16,6 +16,7 @@ function App() {
     currentIndex,
     agenda,
     isSoundEnabled,
+    overtimeReminderMinutes,
     toggle,
     reset,
     nextItem,
@@ -23,8 +24,10 @@ function App() {
     goToItem,
     startItem,
     updateAgenda,
-    reorderAgenda,
+    reorderAgendaByIndex,
     setSoundEnabled,
+    setOvertimeReminderMinutes,
+    playBell,
   } = useTimer(DEFAULT_AGENDA);
 
   const hasPrev = currentIndex > 0;
@@ -63,11 +66,14 @@ function App() {
           onGoTo={goToItem}
           onStart={startItem}
           onToggle={toggle}
-          onReorder={reorderAgenda}
+          onReorder={reorderAgendaByIndex}
           isRunning={isRunning}
           remainingSeconds={remainingSeconds}
           isSoundEnabled={isSoundEnabled}
           onSoundToggle={setSoundEnabled}
+          onPlayBell={playBell}
+          overtimeReminderMinutes={overtimeReminderMinutes}
+          onOvertimeReminderChange={setOvertimeReminderMinutes}
         />
       </div>
     </main>

@@ -8,6 +8,8 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
         remainingSeconds: initialAgenda[0]?.durationSeconds || 0,
         isRunning: false,
         isSoundEnabled: true,
+        overtimeReminderMinutes: null,
+        hasOvertimeReminderPlayed: false,
     });
 
     // 現在のアイテムの時間を監視して自動リセットするための参照
@@ -50,14 +52,22 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
                 setState((prev) => {
                     const nextSeconds = prev.remainingSeconds - 1;
 
+                    const reminderSeconds = prev.overtimeReminderMinutes ? prev.overtimeReminderMinutes * 60 : null;
+                    const crossedReminderThreshold = reminderSeconds !== null
+                        ? !prev.hasOvertimeReminderPlayed &&
+                        prev.remainingSeconds > -reminderSeconds &&
+                        nextSeconds <= -reminderSeconds
+                        : false;
+
                     // 0になった瞬間にベルを鳴らす
-                    if (nextSeconds === 0) {
+                    if (nextSeconds === 0 || crossedReminderThreshold) {
                         playBell();
                     }
 
                     return {
                         ...prev,
                         remainingSeconds: nextSeconds,
+                        hasOvertimeReminderPlayed: prev.hasOvertimeReminderPlayed || crossedReminderThreshold,
                     };
                 });
             }, 1000);
@@ -78,6 +88,7 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
                 ...prev,
                 remainingSeconds: currentItem.durationSeconds,
                 isRunning: false,
+                hasOvertimeReminderPlayed: false,
             }));
         }
         lastDurationRef.current = currentItem.durationSeconds;
@@ -122,6 +133,7 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
                 agenda: newAgenda,
                 remainingSeconds: currentItem?.durationSeconds || 0,
                 isRunning: false,
+                hasOvertimeReminderPlayed: false,
             };
         });
     }, []);
@@ -156,6 +168,7 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
                     remainingSeconds: newAgenda[nextIndex].durationSeconds,
                     isRunning: prev.isRunning,
                     agenda: newAgenda,
+                    hasOvertimeReminderPlayed: false,
                 };
             }
             return prev;
@@ -192,6 +205,7 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
                     remainingSeconds: newAgenda[prevIndex].durationSeconds,
                     isRunning: prev.isRunning,
                     agenda: newAgenda,
+                    hasOvertimeReminderPlayed: false,
                 };
             }
             return prev;
@@ -219,6 +233,7 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
                     remainingSeconds: newAgenda[index].durationSeconds,
                     isRunning: false,
                     agenda: newAgenda,
+                    hasOvertimeReminderPlayed: false,
                 };
             }
             return prev;
@@ -254,28 +269,30 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
                     remainingSeconds: newAgenda[index].durationSeconds,
                     isRunning: true,
                     agenda: newAgenda,
+                    hasOvertimeReminderPlayed: false,
                 };
             }
             return prev;
         });
     }, []);
 
-    const reorderAgenda = useCallback((index: number, direction: 'up' | 'down') => {
+    const reorderAgendaByIndex = useCallback((fromIndex: number, toIndex: number) => {
         setState((prev) => {
+            if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= prev.agenda.length || toIndex >= prev.agenda.length) {
+                return prev;
+            }
+
             const newAgenda = [...prev.agenda];
-            const targetIndex = direction === 'up' ? index - 1 : index + 1;
+            const [moved] = newAgenda.splice(fromIndex, 1);
+            newAgenda.splice(toIndex, 0, moved);
 
-            if (targetIndex < 0 || targetIndex >= newAgenda.length) return prev;
-
-            // 要素の入れ替え
-            [newAgenda[index], newAgenda[targetIndex]] = [newAgenda[targetIndex], newAgenda[index]];
-
-            // 現在フォーカスしている項目が移動した場合、currentIndex を追従させる
             let nextCurrentIndex = prev.currentIndex;
-            if (prev.currentIndex === index) {
-                nextCurrentIndex = targetIndex;
-            } else if (prev.currentIndex === targetIndex) {
-                nextCurrentIndex = index;
+            if (prev.currentIndex === fromIndex) {
+                nextCurrentIndex = toIndex;
+            } else if (fromIndex < prev.currentIndex && toIndex >= prev.currentIndex) {
+                nextCurrentIndex = prev.currentIndex - 1;
+            } else if (fromIndex > prev.currentIndex && toIndex <= prev.currentIndex) {
+                nextCurrentIndex = prev.currentIndex + 1;
             }
 
             return {
@@ -306,6 +323,14 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
         setState((prev) => ({ ...prev, isSoundEnabled: enabled }));
     }, []);
 
+    const setOvertimeReminderMinutes = useCallback((minutes: number | null) => {
+        setState((prev) => ({
+            ...prev,
+            overtimeReminderMinutes: minutes && minutes > 0 ? minutes : null,
+            hasOvertimeReminderPlayed: false,
+        }));
+    }, []);
+
     return {
         ...state,
         toggle,
@@ -315,7 +340,9 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
         goToItem,
         startItem,
         updateAgenda,
-        reorderAgenda,
+        reorderAgendaByIndex,
         setSoundEnabled,
+        setOvertimeReminderMinutes,
+        playBell,
     };
 };

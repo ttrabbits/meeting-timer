@@ -72,4 +72,33 @@
   body {
     @apply bg-black text-white antialiased;
   }
+
+  /* Remove number input spinners for a cleaner duration control */
+  .spinless-number::-webkit-outer-spin-button,
+  .spinless-number::-webkit-inner-spin-button {
+    margin: 0;
+    -webkit-appearance: none;
+  }
+
+  .spinless-number[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
+  /* Dark scrollbars for agenda list */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(24, 24, 27, 0.9);
+    border-radius: 9999px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(82, 82, 91, 0.8);
+    border-radius: 9999px;
+    border: 2px solid rgba(24, 24, 27, 0.9);
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(113, 113, 122, 0.9);
+  }
 }
