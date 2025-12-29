@@ -18,7 +18,9 @@ function App() {
     toggle,
     reset,
     nextItem,
+    prevItem,
     goToItem,
+    startItem,
     reorderItem,
     updateAgenda,
   } = useTimer(INITIAL_AGENDA);
@@ -40,7 +42,9 @@ function App() {
             onToggle={toggle}
             onReset={reset}
             onNext={nextItem}
+            onPrevious={prevItem}
             hasMore={currentIndex < agenda.length - 1}
+            hasPrev={currentIndex > 0}
           />
         </div>
       </main>
@@ -52,7 +56,11 @@ function App() {
           currentIndex={currentIndex}
           onUpdate={updateAgenda}
           onGoTo={goToItem}
+          onStart={startItem}
+          onToggle={toggle}
           onReorder={reorderItem}
+          isRunning={isRunning}
+          remainingSeconds={remainingSeconds}
         />
       </aside>
     </div>

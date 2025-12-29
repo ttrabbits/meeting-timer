@@ -60,6 +60,7 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
         setState((prev) => {
             const nextIndex = prev.currentIndex + 1;
             if (nextIndex < prev.agenda.length) {
+                lastDurationRef.current = prev.agenda[nextIndex].durationSeconds;
                 return {
                     ...prev,
                     currentIndex: nextIndex,
@@ -71,14 +72,46 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
         });
     }, []);
 
+    const prevItem = useCallback(() => {
+        setState((prev) => {
+            const prevIndex = prev.currentIndex - 1;
+            if (prevIndex >= 0) {
+                lastDurationRef.current = prev.agenda[prevIndex].durationSeconds;
+                return {
+                    ...prev,
+                    currentIndex: prevIndex,
+                    remainingSeconds: prev.agenda[prevIndex].durationSeconds,
+                    isRunning: false,
+                };
+            }
+            return prev;
+        });
+    }, []);
+
     const goToItem = useCallback((index: number) => {
         setState((prev) => {
             if (index >= 0 && index < prev.agenda.length) {
+                lastDurationRef.current = prev.agenda[index].durationSeconds;
                 return {
                     ...prev,
                     currentIndex: index,
                     remainingSeconds: prev.agenda[index].durationSeconds,
                     isRunning: false,
+                };
+            }
+            return prev;
+        });
+    }, []);
+
+    const startItem = useCallback((index: number) => {
+        setState((prev) => {
+            if (index >= 0 && index < prev.agenda.length) {
+                lastDurationRef.current = prev.agenda[index].durationSeconds;
+                return {
+                    ...prev,
+                    currentIndex: index,
+                    remainingSeconds: prev.agenda[index].durationSeconds,
+                    isRunning: true,
                 };
             }
             return prev;
@@ -132,7 +165,9 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
         toggle,
         reset,
         nextItem,
+        prevItem,
         goToItem,
+        startItem,
         reorderItem,
         updateAgenda,
     };
