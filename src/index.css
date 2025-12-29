@@ -1,290 +1,75 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
 :root {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  /* Apple Style Palette - Cards & Sidebar */
-  --bg-color: #000000;
-  --sidebar-bg: #000000;
-  /* 全体を漆黒に保ちつつ、カードで差をつける */
-  --card-bg: #1C1C1E;
-  --card-bg-active: #2C2C2E;
-  --text-primary: #FFFFFF;
-  --text-secondary: #8E8E93;
-  --accent-color: #0A84FF;
-  --negative-color: #FF453A;
-  --border-color: #38383A;
-
-  color-scheme: dark;
-  color: var(--text-primary);
-  background-color: var(--bg-color);
-
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --background: oklch(0 0 0);
+  /* Black */
+  --foreground: oklch(1 0 0);
+  /* White */
+  --card: oklch(0.1 0 0);
+  --card-foreground: oklch(1 0 0);
+  --popover: oklch(0.1 0 0);
+  --popover-foreground: oklch(1 0 0);
+  --primary: oklch(0.5 0.2 250);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.2 0 0);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.2 0 0);
+  --muted-foreground: oklch(0.6 0 0);
+  --accent: oklch(0.3 0 0);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.6 0.2 20);
+  --border: oklch(0.2 0 0);
+  --input: oklch(0.2 0 0);
+  --ring: oklch(0.5 0.2 250);
+  --radius: 0.75rem;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  min-height: 100vh;
-  background-color: var(--bg-color);
+.dark {
+  --background: oklch(0 0 0);
+  --foreground: oklch(1 0 0);
+  --card: oklch(0.1 0 0);
+  --card-foreground: oklch(1 0 0);
 }
 
-#root {
-  width: 100%;
-}
-
-.app-container {
-  display: flex;
-  height: 100vh;
-  width: 100%;
-}
-
-/* Main Display */
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 3rem;
-  padding: 2rem;
-}
-
-.timer-display {
-  font-size: 15rem;
-  /* デスクトップではさらに大きく */
-  font-weight: 200;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.timer-display.negative {
-  color: var(--negative-color);
-}
-
-/* Sidebar */
-.sidebar {
-  width: 380px;
-  background-color: var(--sidebar-bg);
-  border-left: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  padding: 2rem 1rem;
-  box-sizing: border-box;
-}
-
-.agenda-manager h3 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  padding-left: 0.5rem;
-}
-
-.agenda-list-container {
-  flex: 1;
-  overflow-y: auto;
-  padding-right: 0.5rem;
-}
-
-/* Agenda Card */
-.agenda-card {
-  background-color: var(--card-bg);
-  border-radius: 12px;
-  margin-bottom: 0.75rem;
-  padding: 0.75rem;
-  display: flex;
-  align-items: stretch;
-  gap: 0.75rem;
-  border: 1px solid transparent;
-  transition: all 0.2s;
-}
-
-.agenda-card.active {
-  background-color: var(--card-bg-active);
-  border-color: var(--accent-color);
-  box-shadow: 0 4px 12px rgba(10, 132, 255, 0.2);
-}
-
-/* Left Actions */
-.card-actions-left {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 30px;
-  border-right: 1px solid var(--border-color);
-  padding-right: 0.75rem;
-}
-
-.btn-focus {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid var(--border-color);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 0.5rem;
-  cursor: pointer;
-}
-
-.btn-focus.active {
-  background-color: var(--accent-color);
-  border-color: var(--accent-color);
-  color: white;
-}
-
-.card-reorder {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.card-reorder button {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 0.8rem;
-  padding: 0;
-}
-
-.card-reorder button:disabled {
-  opacity: 0.1;
-}
-
-/* Card Content: 2-Row Form */
-.card-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.name-row input {
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  font-size: 1.05rem;
-  font-weight: 600;
-  padding: 0;
-}
-
-.name-row input:focus {
-  outline: none;
-}
-
-.time-row {
-  display: flex;
-  align-items: center;
-}
-
-.time-input-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-}
-
-.time-input-group input {
-  width: 35px;
-  background: transparent;
-  border: none;
-  color: var(--accent-color);
-  font-size: 0.95rem;
-  font-weight: 500;
-  text-align: center;
-  padding: 0;
-}
-
-.time-input-group input:focus {
-  outline: none;
-}
-
-.card-unit {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-/* Right Actions */
-.card-actions-right {
-  display: flex;
-  align-items: flex-start;
-}
-
-.btn-card-remove {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1.2rem;
-  cursor: pointer;
-  opacity: 0.3;
-}
-
-.btn-card-remove:hover {
-  opacity: 1;
-  color: var(--negative-color);
-}
-
-/* Add Card Section */
-.add-item-card-section {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
-}
-
-.add-card-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 1rem;
-  border-radius: 12px;
-}
-
-.add-card-input-title {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--border-color);
-  color: white;
-  padding: 0.5rem 0;
-  font-size: 1rem;
-}
-
-.add-card-input-title:focus {
-  outline: none;
-  border-bottom-color: var(--accent-color);
-}
-
-.add-card-bottom-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.btn-add-card {
-  background: var(--accent-color);
-  color: white;
-  border: none;
-  padding: 0.5rem 1.2rem;
-  border-radius: 20px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-@media (max-width: 900px) {
-  .app-container {
-    flex-direction: column;
-    height: auto;
+@layer base {
+  * {
+    @apply border-zinc-800 outline-none;
   }
 
-  .sidebar {
-    width: 100%;
-    border-left: none;
-    border-top: 1px solid var(--border-color);
+  body {
+    @apply bg-black text-white antialiased;
   }
 }

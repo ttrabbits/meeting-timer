@@ -2,7 +2,6 @@ import { useTimer } from './hooks/useTimer';
 import { TimerDisplay } from './components/TimerDisplay';
 import { TimerControls } from './components/TimerControls';
 import { AgendaManager } from './components/AgendaManager';
-import './App.css';
 
 const INITIAL_AGENDA = [
   { id: '1', title: 'Aさん', durationSeconds: 5 * 60 },
@@ -27,23 +26,27 @@ function App() {
   const currentItem = agenda[currentIndex];
 
   return (
-    <div className="app-container">
-      <main className="main-content">
-        <TimerDisplay
-          seconds={remainingSeconds}
-          title={currentItem?.title || '準備完了'}
-        />
+    <div className="dark flex h-screen w-full bg-black text-white selection:bg-blue-500/30">
+      {/* Main Timer Content */}
+      <main className="flex-1 flex flex-col items-center justify-center p-8 gap-12">
+        <div className="w-full max-w-2xl flex flex-col items-center gap-8">
+          <TimerDisplay
+            seconds={remainingSeconds}
+            title={currentItem?.title || '準備完了'}
+          />
 
-        <TimerControls
-          isRunning={isRunning}
-          onToggle={toggle}
-          onReset={reset}
-          onNext={nextItem}
-          hasMore={currentIndex < agenda.length - 1}
-        />
+          <TimerControls
+            isRunning={isRunning}
+            onToggle={toggle}
+            onReset={reset}
+            onNext={nextItem}
+            hasMore={currentIndex < agenda.length - 1}
+          />
+        </div>
       </main>
 
-      <aside className="sidebar">
+      {/* Sidebar for Agenda */}
+      <aside className="w-[400px] border-l border-zinc-800 bg-zinc-950/50 flex flex-col overflow-hidden">
         <AgendaManager
           agenda={agenda}
           currentIndex={currentIndex}

@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import type { AgendaItem } from '../types/timer';
+import type { AgendaItem } from '@/types/timer';
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Trash2, ChevronUp, ChevronDown, CheckCircle2, Circle, Plus } from 'lucide-react';
 
 interface AgendaManagerProps {
     agenda: AgendaItem[];
@@ -59,97 +64,136 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
     };
 
     return (
-        <div className="agenda-manager">
-            <h3>予定リスト</h3>
+        <div className="flex flex-col h-full p-6 gap-6">
+            <h3 className="text-2xl font-bold tracking-tight">予定リスト</h3>
 
-            <div className="agenda-list-container">
-                <div className="agenda-card-list">
-                    {agenda.map((item, index) => (
-                        <div key={item.id} className={`agenda-card ${index === currentIndex ? 'active' : ''}`}>
-                            <div className="card-actions-left">
-                                <button
+            <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+                {agenda.map((item, index) => (
+                    <Card
+                        key={item.id}
+                        className={`transition-all border-none ${index === currentIndex
+                                ? 'bg-zinc-800 ring-1 ring-blue-500 shadow-lg shadow-blue-500/10'
+                                : 'bg-zinc-900/50 hover:bg-zinc-900'
+                            }`}
+                    >
+                        <CardContent className="p-4 flex gap-4 items-start">
+                            {/* Left Controls */}
+                            <div className="flex flex-col gap-2 pt-1">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className={`h-6 w-6 rounded-full transition-colors ${index === currentIndex ? 'text-blue-500' : 'text-zinc-600 hover:text-zinc-400'
+                                        }`}
                                     onClick={() => onGoTo(index)}
-                                    className={`btn-focus ${index === currentIndex ? 'active' : ''}`}
-                                    title="フォーカス"
                                 >
-                                    ●
-                                </button>
-                                <div className="card-reorder">
-                                    <button onClick={() => onReorder(index, 'up')} disabled={index === 0}>↑</button>
-                                    <button onClick={() => onReorder(index, 'down')} disabled={index === agenda.length - 1}>↓</button>
+                                    {index === currentIndex ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
+                                </Button>
+                                <div className="flex flex-col gap-0.5">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-5 w-5 text-zinc-600 hover:text-zinc-400 disabled:opacity-0"
+                                        onClick={() => onReorder(index, 'up')}
+                                        disabled={index === 0}
+                                    >
+                                        <ChevronUp className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-5 w-5 text-zinc-600 hover:text-zinc-400 disabled:opacity-0"
+                                        onClick={() => onReorder(index, 'down')}
+                                        disabled={index === agenda.length - 1}
+                                    >
+                                        <ChevronDown className="h-4 w-4" />
+                                    </Button>
                                 </div>
                             </div>
 
-                            <div className="card-content">
-                                <div className="content-row name-row">
-                                    <input
-                                        type="text"
-                                        className="card-input-title"
-                                        value={item.title}
-                                        onChange={(e) => updateItem(item.id, { title: e.target.value })}
-                                        placeholder="議題名"
-                                    />
-                                </div>
-                                <div className="content-row time-row">
-                                    <div className="time-input-group">
-                                        <input
+                            {/* Form Content */}
+                            <div className="flex-1 space-y-3">
+                                <Input
+                                    className="h-auto p-0 border-none bg-transparent text-lg font-semibold focus-visible:ring-0 placeholder:text-zinc-700"
+                                    value={item.title}
+                                    onChange={(e) => updateItem(item.id, { title: e.target.value })}
+                                    placeholder="議題名..."
+                                />
+
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-1.5 bg-black/30 rounded-md px-2 py-1">
+                                        <Input
                                             type="number"
-                                            className="card-input-time"
+                                            className="w-10 h-7 p-0 border-none bg-transparent text-center text-blue-400 focus-visible:ring-0 font-mono"
                                             value={Math.floor(item.durationSeconds / 60)}
                                             onChange={(e) => handleEditTime(item.id, item.durationSeconds, 'min', parseInt(e.target.value) || 0)}
                                         />
-                                        <span className="card-unit">分</span>
-                                        <input
+                                        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">min</span>
+                                        <Input
                                             type="number"
-                                            className="card-input-time"
+                                            className="w-10 h-7 p-0 border-none bg-transparent text-center text-blue-400 focus-visible:ring-0 font-mono"
                                             max="59"
                                             value={item.durationSeconds % 60}
                                             onChange={(e) => handleEditTime(item.id, item.durationSeconds, 'sec', parseInt(e.target.value) || 0)}
                                         />
-                                        <span className="card-unit">秒</span>
+                                        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">sec</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="card-actions-right">
-                                <button onClick={() => removeItem(item.id)} className="btn-card-remove">×</button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                            {/* Remove */}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-zinc-700 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                                onClick={() => removeItem(item.id)}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </CardContent>
+                    </Card>
+                ))}
             </div>
 
-            <div className="add-item-card-section">
-                <form onSubmit={addItem} className="add-card-form">
-                    <input
-                        type="text"
-                        placeholder="新規課題を追加..."
-                        className="add-card-input-title"
-                        value={newTitle}
-                        onChange={(e) => setNewTitle(e.target.value)}
-                    />
-                    <div className="add-card-bottom-row">
-                        <div className="time-input-group">
-                            <input
-                                type="number"
-                                min="0"
-                                value={newMinutes}
-                                onChange={(e) => setNewMinutes(parseInt(e.target.value) || 0)}
-                            />
-                            <span className="card-unit">分</span>
-                            <input
-                                type="number"
-                                min="0"
-                                max="59"
-                                value={newSeconds}
-                                onChange={(e) => setNewSeconds(parseInt(e.target.value) || 0)}
-                            />
-                            <span className="card-unit">秒</span>
+            {/* Add New */}
+            <Card className="bg-blue-500/5 border-blue-500/20">
+                <CardContent className="p-4 space-y-4">
+                    <Label className="text-xs font-bold text-blue-500/70 uppercase tracking-wider ml-1">新規予定の追加</Label>
+                    <div className="space-y-3">
+                        <Input
+                            placeholder="議題のタイトルを入力..."
+                            className="bg-black/50 border-zinc-800 focus-visible:ring-blue-500/50"
+                            value={newTitle}
+                            onChange={(e) => setNewTitle(e.target.value)}
+                        />
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 bg-black/50 rounded-lg px-3 py-1.5 border border-zinc-800">
+                                <input
+                                    type="number"
+                                    className="w-8 bg-transparent text-center outline-none"
+                                    value={newMinutes}
+                                    onChange={(e) => setNewMinutes(parseInt(e.target.value) || 0)}
+                                />
+                                <span className="text-[10px] font-bold text-zinc-600">分</span>
+                                <input
+                                    type="number"
+                                    className="w-8 bg-transparent text-center outline-none"
+                                    max="59"
+                                    value={newSeconds}
+                                    onChange={(e) => setNewSeconds(parseInt(e.target.value) || 0)}
+                                />
+                                <span className="text-[10px] font-bold text-zinc-600">秒</span>
+                            </div>
+                            <Button
+                                className="bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg shadow-blue-500/20"
+                                onClick={addItem}
+                                disabled={!newTitle}
+                            >
+                                <Plus className="h-4 w-4 mr-2" /> 追加
+                            </Button>
                         </div>
-                        <button type="submit" className="btn-add-card">追加</button>
                     </div>
-                </form>
-            </div>
+                </CardContent>
+            </Card>
         </div>
     );
 };
