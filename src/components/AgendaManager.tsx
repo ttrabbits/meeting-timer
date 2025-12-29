@@ -4,23 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { CheckCircle2, Circle, Plus, Clock, Play, Pause, X, Volume2, VolumeX, AlarmClock } from 'lucide-react';
+import { Clock, Play, Pause, X, Volume2, VolumeX, AlarmClock } from 'lucide-react';
 import { DndContext, closestCenter, type DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { restrictToVerticalAxis, restrictToFirstScrollableAncestor } from '@dnd-kit/modifiers';
-import { formatWallTime } from '@/utils/timeFormat';
 
 interface AgendaManagerProps {
     agenda: AgendaItem[];
     currentIndex: number;
     onUpdate: (newAgenda: AgendaItem[]) => void;
-    onGoTo: (index: number) => void;
     onStart: (index: number) => void;
     onToggle: () => void;
     onReorder: (fromIndex: number, toIndex: number) => void;
     isRunning?: boolean;
-    remainingSeconds?: number;
     isSoundEnabled: boolean;
     onSoundToggle: (enabled: boolean) => void;
     overtimeReminderMinutes: number | null;
@@ -31,12 +28,10 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
     agenda,
     currentIndex,
     onUpdate,
-    onGoTo,
     onStart,
     onToggle,
     onReorder,
     isRunning = false,
-    remainingSeconds = 0,
     isSoundEnabled,
     onSoundToggle,
     overtimeReminderMinutes,
@@ -65,8 +60,7 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
         item: AgendaItem;
         index: number;
         isActive: boolean;
-        timeRange: string | null;
-    }> = ({ item, index, isActive, timeRange }) => {
+    }> = ({ item, index, isActive }) => {
         const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
         const style = {
             transform: CSS.Transform.toString(transform),
@@ -97,57 +91,44 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
                 </button>
                 <CardContent className="p-4 flex gap-3 items-center">
                     {/* Left Status Controls */}
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className={`h-9 w-9 rounded-full transition-all active:scale-95 ${isActive
-                                ? isRunning
-                                    ? 'bg-orange-500/15 text-orange-300 hover:bg-orange-500/20'
-                                    : 'bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30'
-                                : 'bg-black/40 text-zinc-400 hover:text-emerald-300 hover:bg-emerald-500/10'
-                                }`}
-                            onClick={() => isActive ? onToggle() : onStart(index)}
-                            onPointerDown={(e) => e.stopPropagation()}
-                        >
-                            {isActive && isRunning ? (
-                                <Pause className="h-4 w-4 fill-current" />
-                            ) : (
-                                <Play className="h-4 w-4 fill-current ml-0.5" />
-                            )}
-                        </Button>
-
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className={`h-8 w-8 rounded-full transition-colors ${isActive ? 'text-blue-200' : 'text-zinc-500 hover:text-zinc-300'
-                                }`}
-                            onClick={() => onGoTo(index)}
-                            onPointerDown={(e) => e.stopPropagation()}
-                        >
-                            {isActive ? <CheckCircle2 className="h-4.5 w-4.5" /> : <Circle className="h-4.5 w-4.5" />}
-                        </Button>
-                    </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className={`h-9 w-9 rounded-full transition-all active:scale-95 ${isActive
+                                            ? isRunning
+                                                ? 'bg-orange-500/15 text-orange-300 hover:bg-orange-500/20'
+                                                : 'bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30'
+                                            : 'bg-black/40 text-zinc-400 hover:text-emerald-300 hover:bg-emerald-500/10'
+                                            }`}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            isActive ? onToggle() : onStart(index);
+                                        }}
+                                        onPointerDown={(e) => e.stopPropagation()}
+                                    >
+                                        {isActive && isRunning ? (
+                                            <Pause className="h-4 w-4 fill-current" />
+                                        ) : (
+                                            <Play className="h-4 w-4 fill-current ml-0.5" />
+                                        )}
+                                    </Button>
+                                </div>
 
                     {/* Main Info */}
                     <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 pr-10">
-                            <Input
-                                className={`h-9 px-3 border border-transparent bg-black/30 text-sm font-semibold focus-visible:ring-1 focus-visible:ring-blue-500/40 placeholder:text-zinc-500 truncate ${isActive ? 'text-white' : 'text-zinc-200'
-                                    }`}
-                                value={item.title}
-                                onChange={(e) => updateItem(item.id, { title: e.target.value })}
-                                placeholder="議題名..."
-                                onPointerDown={(e) => e.stopPropagation()}
-                            />
-                            <div className={`flex items-center gap-1 text-[10px] font-semibold whitespace-nowrap min-w-[120px] justify-end ${timeRange ? (isActive ? 'text-blue-200' : 'text-zinc-400') : 'text-zinc-600'
-                                }`}>
-                                <Clock className="h-3 w-3" />
-                                <span>{timeRange || '--:--'}</span>
-                            </div>
-                        </div>
+                                    <div className="flex items-center gap-3 pr-4">
+                                        <Input
+                                            className={`h-9 px-3 border border-transparent bg-black/30 text-sm font-semibold focus-visible:ring-1 focus-visible:ring-blue-500/40 placeholder:text-zinc-500 truncate ${isActive ? 'text-white' : 'text-zinc-200'
+                                                }`}
+                                            value={item.title}
+                                            onChange={(e) => updateItem(item.id, { title: e.target.value })}
+                                            placeholder="議題名..."
+                                            onPointerDown={(e) => e.stopPropagation()}
+                                        />
+                                    </div>
 
-                        <div className="flex items-center gap-2 mt-2 pr-10">
+                                    <div className="flex items-center gap-2 mt-2 pr-4">
                             <div className="inline-flex items-center gap-1.5 px-3 py-2 bg-black/30 rounded-lg border border-zinc-800/70">
                                 <Clock className="h-4 w-4 text-zinc-500" />
                                 <Input
@@ -175,49 +156,6 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
                 </CardContent>
             </Card>
         );
-    };
-
-    const getEstimatedTimeRange = (index: number) => {
-        const item = agenda[index];
-        if (!item) return null;
-
-        // 過去のアイテム：実績があれば表示
-        if (index < currentIndex) {
-            if (item.startTime && item.endTime) {
-                return `${formatWallTime(new Date(item.startTime))} - ${formatWallTime(new Date(item.endTime))}`;
-            }
-            return null;
-        }
-
-        // 現在のアイテム：開始実績があればそれを使い、なければ現在時刻から予測
-        if (index === currentIndex) {
-            // まだ開始していない（isRunning false かつ startTime なし）場合は次項と同じ予測に倒す
-            if (!isRunning && !item.startTime) return null;
-
-            const start = item.startTime ? new Date(item.startTime) : new Date();
-            // 一時停止で経過した時間も考慮して、残り秒数ベースで終了予想を算出
-            const end = item.startTime
-                ? new Date(Date.now() + remainingSeconds * 1000)
-                : new Date(start.getTime() + remainingSeconds * 1000);
-
-            return `${formatWallTime(start)} - ${formatWallTime(end)}`;
-        }
-
-        // 未来のアイテム：予測
-        if (!isRunning) return null;
-
-        let secondsUntilStart = remainingSeconds;
-        for (let i = currentIndex + 1; i < index; i++) {
-            secondsUntilStart += agenda[i].durationSeconds;
-        }
-
-        const startTime = new Date();
-        startTime.setSeconds(startTime.getSeconds() + secondsUntilStart);
-
-        const endTime = new Date(startTime.getTime());
-        endTime.setSeconds(endTime.getSeconds() + agenda[index].durationSeconds);
-
-        return `${formatWallTime(startTime)} - ${formatWallTime(endTime)}`;
     };
 
     const addItem = (e: React.FormEvent) => {
@@ -295,7 +233,6 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
                     <SortableContext items={agenda.map((item) => item.id)} strategy={verticalListSortingStrategy}>
                         {agenda.map((item, index) => {
                             const isActive = index === currentIndex;
-                            const timeRange = getEstimatedTimeRange(index);
 
                             return (
                                 <SortableAgendaCard
@@ -303,7 +240,6 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
                                     item={item}
                                     index={index}
                                     isActive={isActive}
-                                    timeRange={timeRange}
                                 />
                             );
                         })}

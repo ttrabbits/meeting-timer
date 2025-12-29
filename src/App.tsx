@@ -23,7 +23,6 @@ function App() {
     reset,
     nextItem,
     prevItem,
-    goToItem,
     startItem,
     updateAgenda,
     reorderAgendaByIndex,
@@ -76,12 +75,10 @@ function App() {
           agenda={agenda}
           currentIndex={currentIndex}
           onUpdate={updateAgenda}
-          onGoTo={goToItem}
           onStart={startItem}
           onToggle={toggle}
           onReorder={reorderAgendaByIndex}
           isRunning={isRunning}
-          remainingSeconds={remainingSeconds}
           isSoundEnabled={isSoundEnabled}
           onSoundToggle={setSoundEnabled}
           overtimeReminderMinutes={overtimeReminderMinutes}
