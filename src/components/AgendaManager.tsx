@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import type { AgendaItem } from '@/types/timer';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Clock, Play, Pause, X, Volume2, VolumeX, AlarmClock } from 'lucide-react';
-import { DndContext, closestCenter, type DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { Clock, Play, Pause, X, Volume2, VolumeX, AlarmClock, GripVertical } from 'lucide-react';
+import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { restrictToVerticalAxis, restrictToFirstScrollableAncestor } from '@dnd-kit/modifiers';
 
 interface AgendaManagerProps {
     agenda: AgendaItem[];
@@ -23,6 +22,164 @@ interface AgendaManagerProps {
     overtimeReminderMinutes: number | null;
     onOvertimeReminderChange: (minutes: number | null) => void;
 }
+
+class InputSafePointerSensor extends PointerSensor {
+    static activators = [{
+        eventName: 'onPointerDown' as const,
+        handler: ({ nativeEvent }: { nativeEvent: PointerEvent }) => {
+            const target = nativeEvent.target as HTMLElement | null;
+            if (target?.closest('[data-dnd-handle]')) {
+                return true;
+            }
+            if (target && target.closest('input, textarea, select, button')) {
+                return false;
+            }
+            return true;
+        }
+    }];
+}
+
+type SortableAgendaCardProps = {
+    item: AgendaItem;
+    index: number;
+    isActive: boolean;
+    isRunning: boolean;
+    isEditing: boolean;
+    onStart: (index: number) => void;
+    onToggle: () => void;
+    onRemove: (id: string) => void;
+    onEditTitle: (id: string, value: string) => void;
+    onEditTime: (id: string, totalSeconds: number, type: 'min' | 'sec', value: number) => void;
+    onSetEditing: (editing: boolean) => void;
+};
+
+const SortableAgendaCard: React.FC<SortableAgendaCardProps> = ({
+    item,
+    index,
+    isActive,
+    isRunning,
+    isEditing,
+    onStart,
+    onToggle,
+    onRemove,
+    onEditTitle,
+    onEditTime,
+    onSetEditing,
+}) => {
+    const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
+        id: item.id,
+        disabled: isEditing,
+    });
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition: transition ?? 'transform 150ms ease',
+    };
+
+    return (
+        <Card
+            ref={setNodeRef}
+            style={style}
+            className={`transition-all duration-300 relative overflow-hidden border ${isActive
+                ? 'bg-blue-950/40 border-blue-400/70 shadow-[0_0_16px_rgba(59,130,246,0.25)]'
+                : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/80'
+                } ${isDragging ? 'ring-1 ring-blue-400/60 opacity-90' : ''}`}
+        >
+            <button
+                className="absolute top-2 right-2 h-7 w-7 rounded-full bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200 flex items-center justify-center"
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove(item.id);
+                }}
+                aria-label="削除"
+            >
+                <X className="h-4 w-4" />
+            </button>
+            <CardContent className="p-4 pr-12 flex gap-3 items-center">
+                {/* Left Controls */}
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-zinc-500 hover:text-white cursor-grab active:cursor-grabbing"
+                        aria-label="ドラッグで並び替え"
+                        data-dnd-handle
+                        {...listeners}
+                        {...attributes}
+                    >
+                        <GripVertical className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-9 w-9 rounded-full transition-all active:scale-95 ${isActive
+                            ? isRunning
+                                ? 'bg-orange-500/15 text-orange-300 hover:bg-orange-500/20'
+                                : 'bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30'
+                            : 'bg-black/40 text-zinc-400 hover:text-emerald-300 hover:bg-emerald-500/10'
+                            }`}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            isActive ? onToggle() : onStart(index);
+                        }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                    >
+                        {isActive && isRunning ? (
+                            <Pause className="h-4 w-4 fill-current" />
+                        ) : (
+                            <Play className="h-4 w-4 fill-current ml-0.5" />
+                        )}
+                    </Button>
+                </div>
+
+                {/* Main Info */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 pr-4">
+                        <Input
+                            className={`h-9 px-3 border border-transparent bg-black/30 text-sm font-semibold focus-visible:ring-1 focus-visible:ring-blue-500/40 placeholder:text-zinc-500 truncate ${isActive ? 'text-white' : 'text-zinc-200'
+                                }`}
+                            value={item.title}
+                            onChange={(e) => onEditTitle(item.id, e.target.value)}
+                            placeholder="議題名..."
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onFocus={() => onSetEditing(true)}
+                            onBlur={() => onSetEditing(false)}
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-2 pr-4">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-2 bg-black/30 rounded-lg border border-zinc-800/70">
+                            <Clock className="h-4 w-4 text-zinc-500" />
+                            <Input
+                                type="number"
+                                min="0"
+                                className={`spinless-number w-14 h-8 px-2 bg-zinc-950/60 border-zinc-800 text-center focus-visible:ring-1 focus-visible:ring-blue-500/40 font-mono text-sm ${isActive ? 'text-blue-200' : 'text-zinc-300'}`}
+                                value={Math.floor(item.durationSeconds / 60)}
+                                onChange={(e) => onEditTime(item.id, item.durationSeconds, 'min', parseInt(e.target.value) || 0)}
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onFocus={() => onSetEditing(true)}
+                                onBlur={() => onSetEditing(false)}
+                            />
+                            <span className="text-[11px] font-medium text-zinc-500">分</span>
+                            <Input
+                                type="number"
+                                min="0"
+                                max="59"
+                                className={`spinless-number w-14 h-8 px-2 bg-zinc-950/60 border-zinc-800 text-center focus-visible:ring-1 focus-visible:ring-blue-500/40 font-mono text-sm ${isActive ? 'text-blue-200' : 'text-zinc-300'}`}
+                                value={item.durationSeconds % 60}
+                                onChange={(e) => onEditTime(item.id, item.durationSeconds, 'sec', parseInt(e.target.value) || 0)}
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onFocus={() => onSetEditing(true)}
+                                onBlur={() => onSetEditing(false)}
+                            />
+                            <span className="text-[11px] font-medium text-zinc-500">秒</span>
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
 
 export const AgendaManager: React.FC<AgendaManagerProps> = ({
     agenda,
@@ -40,10 +197,11 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
     const [newTitle, setNewTitle] = useState('');
     const [newMinutes, setNewMinutes] = useState(5);
     const [newSeconds, setNewSeconds] = useState(0);
+    const [isEditing, setIsEditing] = useState(false);
 
     const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: { distance: 4 }
+        useSensor(InputSafePointerSensor, {
+            activationConstraint: { distance: 4 },
         })
     );
 
@@ -54,108 +212,6 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
         const toIndex = agenda.findIndex((item) => item.id === over.id);
         if (fromIndex === -1 || toIndex === -1) return;
         onReorder(fromIndex, toIndex);
-    };
-
-    const SortableAgendaCard: React.FC<{
-        item: AgendaItem;
-        index: number;
-        isActive: boolean;
-    }> = ({ item, index, isActive }) => {
-        const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
-        const style = {
-            transform: CSS.Transform.toString(transform),
-            transition: transition ?? 'transform 150ms ease',
-        };
-
-        return (
-            <Card
-                ref={setNodeRef}
-                style={style}
-                className={`transition-all duration-300 relative overflow-hidden border ${isActive
-                    ? 'bg-blue-950/40 border-blue-400/70 shadow-[0_0_16px_rgba(59,130,246,0.25)]'
-                    : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/80'
-                    } ${isDragging ? 'ring-1 ring-blue-400/60 opacity-90' : ''}`}
-                {...attributes}
-                {...listeners}
-            >
-                <button
-                    className="absolute top-2 right-2 h-7 w-7 rounded-full bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200 flex items-center justify-center"
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        removeItem(item.id);
-                    }}
-                    aria-label="削除"
-                >
-                    <X className="h-4 w-4" />
-                </button>
-                <CardContent className="p-4 flex gap-3 items-center">
-                    {/* Left Status Controls */}
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className={`h-9 w-9 rounded-full transition-all active:scale-95 ${isActive
-                                            ? isRunning
-                                                ? 'bg-orange-500/15 text-orange-300 hover:bg-orange-500/20'
-                                                : 'bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30'
-                                            : 'bg-black/40 text-zinc-400 hover:text-emerald-300 hover:bg-emerald-500/10'
-                                            }`}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            isActive ? onToggle() : onStart(index);
-                                        }}
-                                        onPointerDown={(e) => e.stopPropagation()}
-                                    >
-                                        {isActive && isRunning ? (
-                                            <Pause className="h-4 w-4 fill-current" />
-                                        ) : (
-                                            <Play className="h-4 w-4 fill-current ml-0.5" />
-                                        )}
-                                    </Button>
-                                </div>
-
-                    {/* Main Info */}
-                    <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-3 pr-4">
-                                        <Input
-                                            className={`h-9 px-3 border border-transparent bg-black/30 text-sm font-semibold focus-visible:ring-1 focus-visible:ring-blue-500/40 placeholder:text-zinc-500 truncate ${isActive ? 'text-white' : 'text-zinc-200'
-                                                }`}
-                                            value={item.title}
-                                            onChange={(e) => updateItem(item.id, { title: e.target.value })}
-                                            placeholder="議題名..."
-                                            onPointerDown={(e) => e.stopPropagation()}
-                                        />
-                                    </div>
-
-                                    <div className="flex items-center gap-2 mt-2 pr-4">
-                            <div className="inline-flex items-center gap-1.5 px-3 py-2 bg-black/30 rounded-lg border border-zinc-800/70">
-                                <Clock className="h-4 w-4 text-zinc-500" />
-                                <Input
-                                    type="number"
-                                    min="0"
-                                    className={`spinless-number w-14 h-8 px-2 bg-zinc-950/60 border-zinc-800 text-center focus-visible:ring-1 focus-visible:ring-blue-500/40 font-mono text-sm ${isActive ? 'text-blue-200' : 'text-zinc-300'}`}
-                                    value={Math.floor(item.durationSeconds / 60)}
-                                    onChange={(e) => handleEditTime(item.id, item.durationSeconds, 'min', parseInt(e.target.value) || 0)}
-                                    onPointerDown={(e) => e.stopPropagation()}
-                                />
-                                <span className="text-[11px] font-medium text-zinc-500">分</span>
-                                <Input
-                                    type="number"
-                                    min="0"
-                                    max="59"
-                                    className={`spinless-number w-14 h-8 px-2 bg-zinc-950/60 border-zinc-800 text-center focus-visible:ring-1 focus-visible:ring-blue-500/40 font-mono text-sm ${isActive ? 'text-blue-200' : 'text-zinc-300'}`}
-                                    value={item.durationSeconds % 60}
-                                    onChange={(e) => handleEditTime(item.id, item.durationSeconds, 'sec', parseInt(e.target.value) || 0)}
-                                    onPointerDown={(e) => e.stopPropagation()}
-                                />
-                                <span className="text-[11px] font-medium text-zinc-500">秒</span>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        );
     };
 
     const addItem = (e: React.FormEvent) => {
@@ -172,7 +228,7 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
         setNewSeconds(0);
     };
 
-    const removeItem = (id: string) => {
+    const removeItem = useCallback((id: string) => {
         const newAgenda = agenda.filter(item => item.id !== id);
         if (newAgenda.length === 0) {
             onUpdate([{
@@ -183,15 +239,15 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
         } else {
             onUpdate(newAgenda);
         }
-    };
+    }, [agenda, onUpdate]);
 
-    const updateItem = (id: string, updates: Partial<AgendaItem>) => {
+    const updateItem = useCallback((id: string, updates: Partial<AgendaItem>) => {
         onUpdate(agenda.map(item =>
             item.id === id ? { ...item, ...updates } : item
         ));
-    };
+    }, [agenda, onUpdate]);
 
-    const handleEditTime = (id: string, totalSeconds: number, type: 'min' | 'sec', value: number) => {
+    const handleEditTime = useCallback((id: string, totalSeconds: number, type: 'min' | 'sec', value: number) => {
         const currentMins = Math.floor(totalSeconds / 60);
         const currentSecs = totalSeconds % 60;
 
@@ -203,7 +259,7 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
         }
 
         updateItem(id, { durationSeconds: Math.max(0, newTotal) });
-    };
+    }, [updateItem]);
 
     return (
         <div className="flex flex-col h-full bg-zinc-950">
@@ -222,27 +278,29 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
                 </div>
             </div>
 
-
             <div className="flex-1 overflow-y-auto px-4 pb-4 pt-2 space-y-3 custom-scrollbar">
                 <DndContext
                     collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
                     sensors={sensors}
-                    modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor]}
+                    onDragEnd={handleDragEnd}
                 >
                     <SortableContext items={agenda.map((item) => item.id)} strategy={verticalListSortingStrategy}>
-                        {agenda.map((item, index) => {
-                            const isActive = index === currentIndex;
-
-                            return (
-                                <SortableAgendaCard
-                                    key={item.id}
-                                    item={item}
-                                    index={index}
-                                    isActive={isActive}
-                                />
-                            );
-                        })}
+                        {agenda.map((item, index) => (
+                            <SortableAgendaCard
+                                key={item.id}
+                                item={item}
+                                index={index}
+                                isActive={index === currentIndex}
+                                isRunning={isRunning}
+                                isEditing={isEditing}
+                                onStart={onStart}
+                                onToggle={onToggle}
+                                onRemove={removeItem}
+                                onEditTitle={(id, value) => updateItem(id, { title: value })}
+                                onEditTime={handleEditTime}
+                                onSetEditing={setIsEditing}
+                            />
+                        ))}
                     </SortableContext>
                 </DndContext>
             </div>
@@ -280,7 +338,7 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
                                         max="59"
                                         className="spinless-number w-14 h-9 px-2 bg-zinc-950/60 border-zinc-800 text-center focus-visible:ring-1 focus-visible:ring-blue-500/40 font-mono text-sm text-zinc-200"
                                         value={newSeconds}
-                                    onChange={(e) => setNewSeconds(parseInt(e.target.value) || 0)}
+                                        onChange={(e) => setNewSeconds(parseInt(e.target.value) || 0)}
                                         onPointerDown={(e) => e.stopPropagation()}
                                     />
                                     <span className="text-[11px] font-medium text-zinc-500">秒</span>
@@ -346,7 +404,6 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
                                 <span className="text-[11px] text-zinc-400 leading-none">分後</span>
                             </div>
                         </div>
-
                     </CardContent>
                 </Card>
             </div>

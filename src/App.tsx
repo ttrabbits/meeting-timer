@@ -25,8 +25,8 @@ function App() {
     prevItem,
     startItem,
     updateAgenda,
-    reorderAgendaByIndex,
     setSoundEnabled,
+    reorderAgendaByIndex,
     setOvertimeReminderMinutes,
     playBell,
   } = useTimer(DEFAULT_AGENDA);
