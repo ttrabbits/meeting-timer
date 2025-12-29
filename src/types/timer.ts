@@ -2,6 +2,8 @@ export interface AgendaItem {
     id: string;
     title: string;
     durationSeconds: number;
+    startTime?: number;
+    endTime?: number;
 }
 
 export interface TimerState {
@@ -9,4 +11,5 @@ export interface TimerState {
     isRunning: boolean;
     currentIndex: number;
     agenda: AgendaItem[];
+    isSoundEnabled: boolean;
 }

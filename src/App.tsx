@@ -3,7 +3,7 @@ import { TimerDisplay } from './components/TimerDisplay';
 import { TimerControls } from './components/TimerControls';
 import { AgendaManager } from './components/AgendaManager';
 
-const INITIAL_AGENDA = [
+const DEFAULT_AGENDA = [
   { id: '1', title: 'Aさん', durationSeconds: 5 * 60 },
   { id: '2', title: 'Bさん', durationSeconds: 3 * 60 },
   { id: '3', title: 'Cさん', durationSeconds: 5 * 60 },
@@ -15,26 +15,31 @@ function App() {
     isRunning,
     currentIndex,
     agenda,
+    isSoundEnabled,
     toggle,
     reset,
     nextItem,
     prevItem,
     goToItem,
     startItem,
-    reorderItem,
     updateAgenda,
-  } = useTimer(INITIAL_AGENDA);
+    reorderAgenda,
+    setSoundEnabled,
+  } = useTimer(DEFAULT_AGENDA);
 
-  const currentItem = agenda[currentIndex];
+  const hasPrev = currentIndex > 0;
+  const hasMore = currentIndex < agenda.length - 1;
 
   return (
-    <div className="dark flex h-screen w-full bg-black text-white selection:bg-blue-500/30">
-      {/* Main Timer Content */}
-      <main className="flex-1 flex flex-col items-center justify-center p-8 gap-12">
-        <div className="w-full max-w-2xl flex flex-col items-center gap-8">
+    <main className="flex h-screen bg-black text-white overflow-hidden font-sans">
+      {/* Left: Timer Panel */}
+      <div className="flex-1 flex flex-col items-center justify-center p-12 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent opacity-50" />
+
+        <div className="z-10 flex flex-col items-center">
           <TimerDisplay
             seconds={remainingSeconds}
-            title={currentItem?.title || '準備完了'}
+            title={agenda[currentIndex]?.title}
           />
 
           <TimerControls
@@ -43,14 +48,14 @@ function App() {
             onReset={reset}
             onNext={nextItem}
             onPrevious={prevItem}
-            hasMore={currentIndex < agenda.length - 1}
-            hasPrev={currentIndex > 0}
+            hasMore={hasMore}
+            hasPrev={hasPrev}
           />
         </div>
-      </main>
+      </div>
 
-      {/* Sidebar for Agenda */}
-      <aside className="w-[400px] border-l border-zinc-800 bg-zinc-950/50 flex flex-col overflow-hidden">
+      {/* Right: Sidebar / Agenda Manager */}
+      <div className="w-[420px] bg-zinc-950 border-l border-white/5 shadow-2xl z-20 overflow-hidden">
         <AgendaManager
           agenda={agenda}
           currentIndex={currentIndex}
@@ -58,12 +63,14 @@ function App() {
           onGoTo={goToItem}
           onStart={startItem}
           onToggle={toggle}
-          onReorder={reorderItem}
+          onReorder={reorderAgenda}
           isRunning={isRunning}
           remainingSeconds={remainingSeconds}
+          isSoundEnabled={isSoundEnabled}
+          onSoundToggle={setSoundEnabled}
         />
-      </aside>
-    </div>
+      </div>
+    </main>
   );
 }
 
