@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { AgendaItem, TimerState } from '../types/timer';
 
 export const useTimer = (initialAgenda: AgendaItem[]) => {
@@ -8,6 +8,9 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
         currentIndex: 0,
         agenda: initialAgenda,
     });
+
+    // 現在のアイテムの時間を監視して自動リセットするための参照
+    const lastDurationRef = useRef<number | null>(null);
 
     useEffect(() => {
         let interval: number | undefined;
@@ -25,6 +28,21 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
             if (interval) clearInterval(interval);
         };
     }, [state.isRunning]);
+
+    // 現在の予定の時間が変更されたら自動停止・リセット
+    useEffect(() => {
+        const currentItem = state.agenda[state.currentIndex];
+        if (!currentItem) return;
+
+        if (lastDurationRef.current !== null && lastDurationRef.current !== currentItem.durationSeconds) {
+            setState((prev) => ({
+                ...prev,
+                remainingSeconds: currentItem.durationSeconds,
+                isRunning: false,
+            }));
+        }
+        lastDurationRef.current = currentItem.durationSeconds;
+    }, [state.agenda, state.currentIndex]);
 
     const toggle = useCallback(() => {
         setState((prev) => ({ ...prev, isRunning: !prev.isRunning }));
@@ -53,12 +71,60 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
         });
     }, []);
 
+    const goToItem = useCallback((index: number) => {
+        setState((prev) => {
+            if (index >= 0 && index < prev.agenda.length) {
+                return {
+                    ...prev,
+                    currentIndex: index,
+                    remainingSeconds: prev.agenda[index].durationSeconds,
+                    isRunning: false,
+                };
+            }
+            return prev;
+        });
+    }, []);
+
+    const reorderItem = useCallback((index: number, direction: 'up' | 'down') => {
+        setState((prev) => {
+            const newAgenda = [...prev.agenda];
+            const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+            if (targetIndex < 0 || targetIndex >= newAgenda.length) return prev;
+
+            // 要素の入れ替え
+            [newAgenda[index], newAgenda[targetIndex]] = [newAgenda[targetIndex], newAgenda[index]];
+
+            // 現在フォーカスしている項目が移動した場合、currentIndex を追従させる
+            let nextCurrentIndex = prev.currentIndex;
+            if (prev.currentIndex === index) {
+                nextCurrentIndex = targetIndex;
+            } else if (prev.currentIndex === targetIndex) {
+                nextCurrentIndex = index;
+            }
+
+            return {
+                ...prev,
+                agenda: newAgenda,
+                currentIndex: nextCurrentIndex,
+            };
+        });
+    }, []);
+
     const updateAgenda = useCallback((newAgenda: AgendaItem[]) => {
-        setState((prev) => ({
-            ...prev,
-            agenda: newAgenda,
-            // 最初のアイテムをセットし直す場合はここを調整
-        }));
+        setState((prev) => {
+            // 現在のインデックスが削除されたアイテムを指している可能性への対応
+            let nextIndex = prev.currentIndex;
+            if (nextIndex >= newAgenda.length) {
+                nextIndex = Math.max(0, newAgenda.length - 1);
+            }
+
+            return {
+                ...prev,
+                agenda: newAgenda,
+                currentIndex: nextIndex,
+            };
+        });
     }, []);
 
     return {
@@ -66,6 +132,8 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
         toggle,
         reset,
         nextItem,
+        goToItem,
+        reorderItem,
         updateAgenda,
     };
 };

@@ -7,7 +7,7 @@ import './App.css';
 const INITIAL_AGENDA = [
   { id: '1', title: 'Aさん', durationSeconds: 5 * 60 },
   { id: '2', title: 'Bさん', durationSeconds: 3 * 60 },
-  { id: '3', title: 'C人', durationSeconds: 5 * 60 },
+  { id: '3', title: 'Cさん', durationSeconds: 5 * 60 },
 ];
 
 function App() {
@@ -19,6 +19,8 @@ function App() {
     toggle,
     reset,
     nextItem,
+    goToItem,
+    reorderItem,
     updateAgenda,
   } = useTimer(INITIAL_AGENDA);
 
@@ -46,6 +48,8 @@ function App() {
           agenda={agenda}
           currentIndex={currentIndex}
           onUpdate={updateAgenda}
+          onGoTo={goToItem}
+          onReorder={reorderItem}
         />
       </aside>
     </div>
