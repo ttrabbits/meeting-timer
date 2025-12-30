@@ -157,19 +157,29 @@ export const replaceAgenda = (
   state: TimerState,
   newAgenda: AgendaItem[],
 ): TimerState => {
-  let currentIndex = state.currentIndex;
-  if (currentIndex >= newAgenda.length) {
-    currentIndex = Math.max(0, newAgenda.length - 1);
-  }
+  const currentId = state.agenda[state.currentIndex]?.id;
+  const currentIndexInNew = currentId
+    ? newAgenda.findIndex((item) => item.id === currentId)
+    : -1;
+
+  let currentIndex =
+    currentIndexInNew >= 0
+      ? currentIndexInNew
+      : Math.min(state.currentIndex, Math.max(0, newAgenda.length - 1));
 
   const currentItem = newAgenda[currentIndex];
+  const remainingSeconds =
+    currentIndexInNew >= 0 && currentItem
+      ? Math.min(state.remainingSeconds, currentItem.durationSeconds)
+      : (currentItem?.durationSeconds ?? 0);
+  const isRunning = currentItem ? state.isRunning : false;
 
   return {
     ...state,
     agenda: newAgenda,
     currentIndex,
-    remainingSeconds: currentItem?.durationSeconds ?? 0,
+    remainingSeconds,
     hasOvertimeReminderPlayed: false,
-    isRunning: currentItem ? state.isRunning : false,
+    isRunning,
   };
 };
