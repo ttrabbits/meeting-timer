@@ -230,9 +230,14 @@ export const replaceAgenda = (
     currentIndex = Math.max(0, newAgenda.length - 1);
   }
 
+  const currentItem = newAgenda[currentIndex];
+
   return {
     ...state,
     agenda: newAgenda,
     currentIndex,
+    remainingSeconds: currentItem?.durationSeconds ?? 0,
+    hasOvertimeReminderPlayed: false,
+    isRunning: currentItem ? state.isRunning : false,
   };
 };

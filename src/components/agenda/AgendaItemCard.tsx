@@ -57,6 +57,29 @@ export const AgendaItemCard: React.FC<AgendaItemCardProps> = ({
     transition: transition ?? 'transform 150ms ease',
   };
 
+  const handleRemove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (isActive && isRunning) return;
+    onRemove(item.id);
+  };
+
+  const parseNonNegative = (value: string) => {
+    const parsed = parseInt(value, 10);
+    if (Number.isNaN(parsed) || parsed < 0) return 0;
+    return parsed;
+  };
+
+  const blockNonNumericKeys = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    const blocked = ['e', 'E', '+', '-', '.'];
+    if (blocked.includes(event.key)) {
+      event.preventDefault();
+    }
+  };
+
+  const inputsDisabled = isActive && isRunning;
+
   return (
     <Card
       ref={setNodeRef}
@@ -71,12 +94,10 @@ export const AgendaItemCard: React.FC<AgendaItemCardProps> = ({
     >
       <button
         className="absolute top-2 right-2 h-7 w-7 rounded-full bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200 flex items-center justify-center"
+        disabled={isActive && isRunning}
         data-testid="agenda-item-remove"
         onMouseDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove(item.id);
-        }}
+        onClick={handleRemove}
         aria-label="削除"
       >
         <X className="h-4 w-4" />
@@ -132,7 +153,11 @@ export const AgendaItemCard: React.FC<AgendaItemCardProps> = ({
               }`}
               data-testid="agenda-item-title"
               value={item.title}
-              onChange={(e) => onEditTitle(item.id, e.target.value)}
+              disabled={inputsDisabled}
+              onChange={(e) => {
+                if (inputsDisabled) return;
+                onEditTitle(item.id, e.target.value);
+              }}
               placeholder="議題名..."
               onPointerDown={(e) => e.stopPropagation()}
               onFocus={() => onSetEditing(true)}
@@ -146,17 +171,21 @@ export const AgendaItemCard: React.FC<AgendaItemCardProps> = ({
               <Input
                 type="number"
                 min="0"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 className={`spinless-number w-14 h-8 px-2 bg-zinc-950/60 border-zinc-800 text-center focus-visible:ring-1 focus-visible:ring-blue-500/40 font-mono text-sm ${
                   isActive ? 'text-blue-200' : 'text-zinc-300'
                 }`}
                 data-testid="agenda-item-minutes"
                 value={Math.floor(item.durationSeconds / 60)}
+                disabled={inputsDisabled}
+                onKeyDown={blockNonNumericKeys}
                 onChange={(e) =>
                   onEditTime(
                     item.id,
                     item.durationSeconds,
                     'min',
-                    parseInt(e.target.value, 10) || 0,
+                    parseNonNegative(e.target.value),
                   )
                 }
                 onPointerDown={(e) => e.stopPropagation()}
@@ -168,17 +197,21 @@ export const AgendaItemCard: React.FC<AgendaItemCardProps> = ({
                 type="number"
                 min="0"
                 max="59"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 className={`spinless-number w-14 h-8 px-2 bg-zinc-950/60 border-zinc-800 text-center focus-visible:ring-1 focus-visible:ring-blue-500/40 font-mono text-sm ${
                   isActive ? 'text-blue-200' : 'text-zinc-300'
                 }`}
                 data-testid="agenda-item-seconds"
                 value={item.durationSeconds % 60}
+                disabled={inputsDisabled}
+                onKeyDown={blockNonNumericKeys}
                 onChange={(e) =>
                   onEditTime(
                     item.id,
                     item.durationSeconds,
                     'sec',
-                    parseInt(e.target.value, 10) || 0,
+                    parseNonNegative(e.target.value),
                   )
                 }
                 onPointerDown={(e) => e.stopPropagation()}

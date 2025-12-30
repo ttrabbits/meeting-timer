@@ -12,4 +12,4 @@ React, TypeScript, Vite, Tailwind CSS, shadcn/ui
 ## ワークフロー
 
 - すべてのやり取りは日本語で行ってください
-- 作業が完了した際はビルドが通ることを確認し lint, format を行ってください
+- 作業が完了した際はビルドが通ることを確認し test, lint, format を実行してください
