@@ -23,7 +23,7 @@ export const AgendaSettings: React.FC<AgendaSettingsProps> = ({
       <CardHeader className="pb-1 px-4 pt-4">
         <CardTitle className="text-sm text-white">サウンド設定</CardTitle>
       </CardHeader>
-      <CardContent className="pt-2 pb-4 px-4 space-y-3">
+      <CardContent className="pt-3 pb-4 px-4 space-y-3">
         <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-black/30 px-3 py-2.5">
           <div className="flex items-center gap-3">
             <div

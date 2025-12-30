@@ -18,6 +18,7 @@ type AgendaManagerProps = {
   onSoundToggle: (enabled: boolean) => void;
   overtimeReminderMinutes: number | null;
   onOvertimeReminderChange: (minutes: number | null) => void;
+  estimatedEndTime?: string | null;
 };
 
 export const AgendaManager: React.FC<AgendaManagerProps> = ({
@@ -32,6 +33,7 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
   onSoundToggle,
   overtimeReminderMinutes,
   onOvertimeReminderChange,
+  estimatedEndTime,
 }) => {
   const [newTitle, setNewTitle] = useState('');
   const [newMinutes, setNewMinutes] = useState(5);
@@ -99,13 +101,27 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
             <div className="h-9 w-9 rounded-full bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
               <Clock className="h-4.5 w-4.5 text-blue-200" />
             </div>
-            <p className="text-sm font-semibold text-white leading-tight">
-              予定リスト
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold text-white leading-tight">
+                予定リスト
+              </p>
+              {isRunning && estimatedEndTime ? (
+                <span className="text-[11px] text-zinc-300 border border-zinc-700 rounded-full px-2 py-0.5">
+                  終了予定 {estimatedEndTime}
+                </span>
+              ) : null}
+            </div>
           </div>
-          <div className="flex items-center gap-1 text-[10px] text-zinc-400">
-            <span className="h-2 w-2 rounded-full bg-emerald-400/80 inline-block" />
-            <span>{agenda.length}</span>
+          <div className="flex items-center gap-2 text-[10px] text-zinc-400">
+            {agenda.length > 0 ? (
+              <span className="text-[11px] text-zinc-300 border border-zinc-700 rounded-full px-2 py-0.5">
+                {currentIndex + 1} / {agenda.length}
+              </span>
+            ) : (
+              <span className="text-[11px] text-zinc-500 border border-zinc-800 rounded-full px-2 py-0.5">
+                0 / 0
+              </span>
+            )}
           </div>
         </div>
       </div>

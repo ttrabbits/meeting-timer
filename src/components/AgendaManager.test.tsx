@@ -43,6 +43,7 @@ describe('AgendaManager の追加処理', () => {
       onSoundToggle: vi.fn(),
       overtimeReminderMinutes: null,
       onOvertimeReminderChange: vi.fn(),
+      estimatedEndTime: '10:00',
       ...overrides,
     };
     render(<AgendaManager {...props} />);
@@ -74,5 +75,26 @@ describe('AgendaManager の追加処理', () => {
       title: 'New Topic',
       durationSeconds: 390,
     });
+  });
+
+  it('再生中は終了予定時刻を表示する', () => {
+    renderManager({ isRunning: true, estimatedEndTime: '12:34' });
+    expect(screen.getByText('終了予定 12:34')).toBeInTheDocument();
+  });
+
+  it('停止中は終了予定時刻を表示しない', () => {
+    renderManager({ isRunning: false, estimatedEndTime: '12:34' });
+    expect(screen.queryByText('終了予定 12:34')).not.toBeInTheDocument();
+  });
+
+  it('予定件数のバッジが表示される', () => {
+    renderManager({
+      agenda: [
+        { id: '1', title: 'A', durationSeconds: 300 },
+        { id: '2', title: 'B', durationSeconds: 180 },
+      ],
+      currentIndex: 0,
+    });
+    expect(screen.getByText('1 / 2')).toBeInTheDocument();
   });
 });

@@ -4,6 +4,7 @@ import { TimerControls } from './components/TimerControls';
 import { AgendaManager } from './components/AgendaManager';
 import { Button } from '@/components/ui/button';
 import { BellRing } from 'lucide-react';
+import { formatWallTime } from './utils/timeFormat';
 
 const DEFAULT_AGENDA = [
   { id: '1', title: 'Aさん', durationSeconds: 5 * 60 },
@@ -33,6 +34,16 @@ function App() {
 
   const hasPrev = currentIndex > 0;
   const hasMore = currentIndex < agenda.length - 1;
+  const totalRemainingSeconds = isRunning
+    ? Math.max(0, remainingSeconds) +
+      agenda
+        .slice(currentIndex + 1)
+        .reduce((acc, item) => acc + item.durationSeconds, 0)
+    : null;
+  const estimatedEndTime =
+    totalRemainingSeconds != null
+      ? formatWallTime(new Date(Date.now() + totalRemainingSeconds * 1000))
+      : null;
 
   return (
     <main className="flex h-screen bg-black text-white overflow-hidden font-sans">
@@ -83,6 +94,7 @@ function App() {
           onSoundToggle={setSoundEnabled}
           overtimeReminderMinutes={overtimeReminderMinutes}
           onOvertimeReminderChange={setOvertimeReminderMinutes}
+          estimatedEndTime={estimatedEndTime}
         />
       </div>
     </main>
