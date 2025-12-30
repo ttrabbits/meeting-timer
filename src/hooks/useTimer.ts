@@ -1,4 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  jumpToIndex,
+  moveToNextItem,
+  moveToPreviousItem,
+  reorderAgendaItems,
+  replaceAgenda,
+  resetCurrentItem,
+  syncCurrentDuration,
+  tickTimer,
+  toggleRunning,
+} from '@/utils/timerLogic';
 import type { AgendaItem, TimerState } from '@/types/timer';
 
 export const useTimer = (initialAgenda: AgendaItem[]) => {
@@ -57,29 +68,11 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
     if (state.isRunning) {
       interval = window.setInterval(() => {
         setState((prev) => {
-          const nextSeconds = prev.remainingSeconds - 1;
-
-          const reminderSeconds = prev.overtimeReminderMinutes
-            ? prev.overtimeReminderMinutes * 60
-            : null;
-          const crossedReminderThreshold =
-            reminderSeconds !== null
-              ? !prev.hasOvertimeReminderPlayed &&
-                prev.remainingSeconds > -reminderSeconds &&
-                nextSeconds <= -reminderSeconds
-              : false;
-
-          // 0になった瞬間にベルを鳴らす
-          if (nextSeconds === 0 || crossedReminderThreshold) {
+          const { nextState, shouldPlayBell } = tickTimer(prev);
+          if (shouldPlayBell) {
             playBell();
           }
-
-          return {
-            ...prev,
-            remainingSeconds: nextSeconds,
-            hasOvertimeReminderPlayed:
-              prev.hasOvertimeReminderPlayed || crossedReminderThreshold,
-          };
+          return nextState;
         });
       }, 1000);
     }
@@ -99,261 +92,73 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
       lastDurationRef.current !== currentItem.durationSeconds
     ) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- agenda変更に合わせて即座に状態を同期する必要があるため
-      setState((prev) => ({
-        ...prev,
-        remainingSeconds: currentItem.durationSeconds,
-        isRunning: false,
-        hasOvertimeReminderPlayed: false,
-      }));
+      setState((prev) => syncCurrentDuration(prev, currentItem.durationSeconds));
     }
     lastDurationRef.current = currentItem.durationSeconds;
   }, [state.agenda, state.currentIndex]);
 
   const toggle = useCallback(() => {
-    setState((prev) => {
-      const isStarting = !prev.isRunning;
-      const newAgenda = [...prev.agenda];
-      const currentItem = newAgenda[prev.currentIndex];
-
-      // 最初に再生を開始した時間を保持（すでにあれば上書きしない）
-      if (isStarting && currentItem && !currentItem.startTime) {
-        newAgenda[prev.currentIndex] = {
-          ...currentItem,
-          startTime: Date.now(),
-        };
-      }
-
-      return {
-        ...prev,
-        isRunning: isStarting,
-        agenda: newAgenda,
-      };
-    });
+    const now = Date.now();
+    setState((prev) => toggleRunning(prev, now));
   }, []);
 
   const reset = useCallback(() => {
-    setState((prev) => {
-      const currentItem = prev.agenda[prev.currentIndex];
-      const newAgenda = [...prev.agenda];
-      if (currentItem) {
-        // リセット時は実績時間もクリア
-        newAgenda[prev.currentIndex] = {
-          ...currentItem,
-          startTime: undefined,
-          endTime: undefined,
-        };
-      }
-      return {
-        ...prev,
-        agenda: newAgenda,
-        remainingSeconds: currentItem?.durationSeconds || 0,
-        isRunning: false,
-        hasOvertimeReminderPlayed: false,
-      };
-    });
+    setState((prev) => resetCurrentItem(prev));
   }, []);
 
   const nextItem = useCallback(() => {
+    const now = Date.now();
     setState((prev) => {
-      const nextIndex = prev.currentIndex + 1;
-      if (nextIndex < prev.agenda.length) {
-        const now = Date.now();
-        const newAgenda = [...prev.agenda];
-
-        // 前のアイテムの終了時間を記録
-        if (newAgenda[prev.currentIndex]) {
-          newAgenda[prev.currentIndex] = {
-            ...newAgenda[prev.currentIndex],
-            endTime: now,
-          };
-        }
-
-        // 次のアイテムの開始時間を記録（再生中なら）
-        if (
-          prev.isRunning &&
-          newAgenda[nextIndex] &&
-          !newAgenda[nextIndex].startTime
-        ) {
-          newAgenda[nextIndex] = {
-            ...newAgenda[nextIndex],
-            startTime: now,
-          };
-        }
-
-        lastDurationRef.current = newAgenda[nextIndex].durationSeconds;
-        return {
-          ...prev,
-          currentIndex: nextIndex,
-          remainingSeconds: newAgenda[nextIndex].durationSeconds,
-          isRunning: prev.isRunning,
-          agenda: newAgenda,
-          hasOvertimeReminderPlayed: false,
-        };
-      }
-      return prev;
+      const nextState = moveToNextItem(prev, now);
+      lastDurationRef.current =
+        nextState.agenda[nextState.currentIndex]?.durationSeconds ?? null;
+      return nextState;
     });
   }, []);
 
   const prevItem = useCallback(() => {
+    const now = Date.now();
     setState((prev) => {
-      const prevIndex = prev.currentIndex - 1;
-      if (prevIndex >= 0) {
-        const now = Date.now();
-        const newAgenda = [...prev.agenda];
-
-        // 現在（移動前）のアイテムの終了時間を記録
-        if (newAgenda[prev.currentIndex]) {
-          newAgenda[prev.currentIndex] = {
-            ...newAgenda[prev.currentIndex],
-            endTime: now,
-          };
-        }
-
-        // 前のアイテムの開始時間を記録（再生中なら）
-        if (
-          prev.isRunning &&
-          newAgenda[prevIndex] &&
-          !newAgenda[prevIndex].startTime
-        ) {
-          newAgenda[prevIndex] = {
-            ...newAgenda[prevIndex],
-            startTime: now,
-          };
-        }
-
-        lastDurationRef.current = newAgenda[prevIndex].durationSeconds;
-        return {
-          ...prev,
-          currentIndex: prevIndex,
-          remainingSeconds: newAgenda[prevIndex].durationSeconds,
-          isRunning: prev.isRunning,
-          agenda: newAgenda,
-          hasOvertimeReminderPlayed: false,
-        };
-      }
-      return prev;
+      const nextState = moveToPreviousItem(prev, now);
+      lastDurationRef.current =
+        nextState.agenda[nextState.currentIndex]?.durationSeconds ?? null;
+      return nextState;
     });
   }, []);
 
   const goToItem = useCallback((index: number) => {
+    const now = Date.now();
     setState((prev) => {
-      if (index >= 0 && index < prev.agenda.length) {
-        const now = Date.now();
-        const newAgenda = [...prev.agenda];
-
-        // 現在のアイテムの終了時間を記録
-        if (newAgenda[prev.currentIndex]) {
-          newAgenda[prev.currentIndex] = {
-            ...newAgenda[prev.currentIndex],
-            endTime: now,
-          };
-        }
-
-        lastDurationRef.current = newAgenda[index].durationSeconds;
-        return {
-          ...prev,
-          currentIndex: index,
-          remainingSeconds: newAgenda[index].durationSeconds,
-          isRunning: false,
-          agenda: newAgenda,
-          hasOvertimeReminderPlayed: false,
-        };
-      }
-      return prev;
+      const nextState = jumpToIndex(prev, index, now, { isRunning: false });
+      lastDurationRef.current =
+        nextState.agenda[nextState.currentIndex]?.durationSeconds ?? null;
+      return nextState;
     });
   }, []);
 
   const startItem = useCallback((index: number) => {
+    const now = Date.now();
     setState((prev) => {
-      if (index >= 0 && index < prev.agenda.length) {
-        const now = Date.now();
-        const newAgenda = [...prev.agenda];
-
-        // 現在のアイテムの終了時間を記録
-        if (newAgenda[prev.currentIndex]) {
-          newAgenda[prev.currentIndex] = {
-            ...newAgenda[prev.currentIndex],
-            endTime: now,
-          };
-        }
-
-        // 新しいアイテムの開始時間を記録（すでにあれば上書きしない）
-        if (newAgenda[index] && !newAgenda[index].startTime) {
-          newAgenda[index] = {
-            ...newAgenda[index],
-            startTime: now,
-          };
-        }
-
-        lastDurationRef.current = newAgenda[index].durationSeconds;
-        return {
-          ...prev,
-          currentIndex: index,
-          remainingSeconds: newAgenda[index].durationSeconds,
-          isRunning: true,
-          agenda: newAgenda,
-          hasOvertimeReminderPlayed: false,
-        };
-      }
-      return prev;
+      const nextState = jumpToIndex(prev, index, now, { isRunning: true });
+      lastDurationRef.current =
+        nextState.agenda[nextState.currentIndex]?.durationSeconds ?? null;
+      return nextState;
     });
   }, []);
 
   const reorderAgendaByIndex = useCallback(
     (fromIndex: number, toIndex: number) => {
-      setState((prev) => {
-        if (
-          fromIndex === toIndex ||
-          fromIndex < 0 ||
-          toIndex < 0 ||
-          fromIndex >= prev.agenda.length ||
-          toIndex >= prev.agenda.length
-        ) {
-          return prev;
-        }
-
-        const newAgenda = [...prev.agenda];
-        const [moved] = newAgenda.splice(fromIndex, 1);
-        newAgenda.splice(toIndex, 0, moved);
-
-        let nextCurrentIndex = prev.currentIndex;
-        if (prev.currentIndex === fromIndex) {
-          nextCurrentIndex = toIndex;
-        } else if (
-          fromIndex < prev.currentIndex &&
-          toIndex >= prev.currentIndex
-        ) {
-          nextCurrentIndex = prev.currentIndex - 1;
-        } else if (
-          fromIndex > prev.currentIndex &&
-          toIndex <= prev.currentIndex
-        ) {
-          nextCurrentIndex = prev.currentIndex + 1;
-        }
-
-        return {
-          ...prev,
-          agenda: newAgenda,
-          currentIndex: nextCurrentIndex,
-        };
-      });
+      setState((prev) => reorderAgendaItems(prev, fromIndex, toIndex));
     },
     [],
   );
 
   const updateAgenda = useCallback((newAgenda: AgendaItem[]) => {
     setState((prev) => {
-      // 現在のインデックスが削除されたアイテムを指している可能性への対応
-      let nextIndex = prev.currentIndex;
-      if (nextIndex >= newAgenda.length) {
-        nextIndex = Math.max(0, newAgenda.length - 1);
-      }
-
-      return {
-        ...prev,
-        agenda: newAgenda,
-        currentIndex: nextIndex,
-      };
+      const nextState = replaceAgenda(prev, newAgenda);
+      lastDurationRef.current =
+        nextState.agenda[nextState.currentIndex]?.durationSeconds ?? null;
+      return nextState;
     });
   }, []);
 
