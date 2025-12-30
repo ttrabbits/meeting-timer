@@ -20,11 +20,11 @@ export const AgendaSettings: React.FC<AgendaSettingsProps> = ({
 }) => {
   return (
     <Card className="bg-gradient-to-br from-zinc-900 via-zinc-900/80 to-zinc-950 border-zinc-800">
-      <CardHeader className="pb-1 px-4 pt-4">
+      <CardHeader className="pb-1 px-3 pt-3">
         <CardTitle className="text-sm text-white">サウンド設定</CardTitle>
       </CardHeader>
-      <CardContent className="pt-3 pb-4 px-4 space-y-3">
-        <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-black/30 px-3 py-2.5">
+      <CardContent className="pt-2 pb-3 px-3 space-y-2">
+        <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-3">
             <div
               className={`p-1.5 rounded-lg ${isSoundEnabled ? 'bg-blue-500/15 text-blue-300' : 'bg-zinc-800 text-zinc-500'}`}
@@ -39,7 +39,7 @@ export const AgendaSettings: React.FC<AgendaSettingsProps> = ({
               終了時に音を鳴らす
             </p>
           </div>
-          <div className="flex items-center gap-2 self-center min-h-[36px]">
+          <div className="flex items-center gap-2 self-center min-h-[36px] px-2">
             <Switch
               checked={isSoundEnabled}
               onCheckedChange={onSoundToggle}
@@ -48,16 +48,18 @@ export const AgendaSettings: React.FC<AgendaSettingsProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-black/30 px-3 py-2.5">
+        <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-3">
-            <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-300">
+            <div
+              className={`p-1.5 rounded-lg ${overtimeReminderMinutes ? 'bg-amber-500/10 text-amber-300' : 'bg-zinc-800 text-zinc-500'}`}
+            >
               <AlarmClock className="h-4 w-4" />
             </div>
             <p className="text-[11px] font-semibold text-white">
               オーバー後に音を鳴らす
             </p>
           </div>
-          <div className="flex items-center gap-2 self-center min-h-[36px]">
+          <div className="flex items-center gap-2 self-center min-h-[36px] px-2">
             <Input
               type="number"
               min="0"
