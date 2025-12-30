@@ -2,8 +2,6 @@ export interface AgendaItem {
   id: string;
   title: string;
   durationSeconds: number;
-  startTime?: number;
-  endTime?: number;
 }
 
 export interface TimerState {

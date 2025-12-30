@@ -43,17 +43,15 @@ describe('tickTimer の動作', () => {
 
 describe('アイテムの移動', () => {
   it('次のアイテムへ移動して残り時間を更新する', () => {
-    const nextState = moveToNextItem(createState(), 1_700_000_000_000);
+    const nextState = moveToNextItem(createState());
     expect(nextState.currentIndex).toBe(1);
     expect(nextState.remainingSeconds).toBe(120);
-    expect(nextState.agenda[0].endTime).toBeDefined();
   });
 
   it('前のアイテムへ移動して残り時間を更新する', () => {
     const base = createState({ currentIndex: 1, remainingSeconds: 80 });
-    const nextState = moveToPreviousItem(base, 1_700_000_000_000);
+    const nextState = moveToPreviousItem(base);
     expect(nextState.currentIndex).toBe(0);
     expect(nextState.remainingSeconds).toBe(60);
-    expect(nextState.agenda[1].endTime).toBeDefined();
   });
 });

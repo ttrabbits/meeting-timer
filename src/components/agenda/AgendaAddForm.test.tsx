@@ -1,10 +1,12 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 
 import { AgendaAddForm } from './AgendaAddForm';
 
-const setup = (overrides: Partial<React.ComponentProps<typeof AgendaAddForm>> = {}) => {
+const setup = (
+  overrides: Partial<React.ComponentProps<typeof AgendaAddForm>> = {},
+) => {
   const props: React.ComponentProps<typeof AgendaAddForm> = {
     title: '',
     minutes: 5,

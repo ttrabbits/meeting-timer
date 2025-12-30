@@ -4,7 +4,9 @@ import { vi } from 'vitest';
 
 import { AgendaSettings } from './AgendaSettings';
 
-const setup = (overrides: Partial<React.ComponentProps<typeof AgendaSettings>> = {}) => {
+const setup = (
+  overrides: Partial<React.ComponentProps<typeof AgendaSettings>> = {},
+) => {
   const props: React.ComponentProps<typeof AgendaSettings> = {
     isSoundEnabled: true,
     onSoundToggle: vi.fn(),
@@ -28,11 +30,17 @@ describe('AgendaSettings', () => {
   it('オーバータイム入力の値に応じて onOvertimeReminderChange が呼ばれる', () => {
     const props = setup({ overtimeReminderMinutes: null });
 
-    fireEvent.change(screen.getByTestId('overtime-input'), { target: { value: '3' } });
+    fireEvent.change(screen.getByTestId('overtime-input'), {
+      target: { value: '3' },
+    });
     expect(props.onOvertimeReminderChange).toHaveBeenLastCalledWith(3);
 
-    fireEvent.change(screen.getByTestId('overtime-input'), { target: { value: '' } });
-    fireEvent.change(screen.getByTestId('overtime-input'), { target: { value: '-1' } });
+    fireEvent.change(screen.getByTestId('overtime-input'), {
+      target: { value: '' },
+    });
+    fireEvent.change(screen.getByTestId('overtime-input'), {
+      target: { value: '-1' },
+    });
     expect(props.onOvertimeReminderChange).toHaveBeenLastCalledWith(null);
   });
 });

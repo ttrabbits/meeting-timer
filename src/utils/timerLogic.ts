@@ -46,35 +46,16 @@ export const syncCurrentDuration = (
   };
 };
 
-export const toggleRunning = (state: TimerState, now: number): TimerState => {
-  const isStarting = !state.isRunning;
-  const agenda = [...state.agenda];
-  const currentItem = agenda[state.currentIndex];
-
-  if (isStarting && currentItem && !currentItem.startTime) {
-    agenda[state.currentIndex] = {
-      ...currentItem,
-      startTime: now,
-    };
-  }
-
+export const toggleRunning = (state: TimerState): TimerState => {
   return {
     ...state,
-    isRunning: isStarting,
-    agenda,
+    isRunning: !state.isRunning,
   };
 };
 
 export const resetCurrentItem = (state: TimerState): TimerState => {
   const agenda = [...state.agenda];
   const currentItem = agenda[state.currentIndex];
-  if (currentItem) {
-    agenda[state.currentIndex] = {
-      ...currentItem,
-      startTime: undefined,
-      endTime: undefined,
-    };
-  }
 
   return {
     ...state,
@@ -85,44 +66,11 @@ export const resetCurrentItem = (state: TimerState): TimerState => {
   };
 };
 
-const recordTransitionTimes = (
-  agenda: AgendaItem[],
-  fromIndex: number,
-  toIndex: number,
-  now: number,
-  shouldStartNext: boolean,
-): AgendaItem[] => {
-  const updatedAgenda = [...agenda];
-
-  if (updatedAgenda[fromIndex]) {
-    updatedAgenda[fromIndex] = {
-      ...updatedAgenda[fromIndex],
-      endTime: now,
-    };
-  }
-
-  const target = updatedAgenda[toIndex];
-  if (shouldStartNext && target && !target.startTime) {
-    updatedAgenda[toIndex] = {
-      ...target,
-      startTime: now,
-    };
-  }
-
-  return updatedAgenda;
-};
-
-export const moveToNextItem = (state: TimerState, now: number): TimerState => {
+export const moveToNextItem = (state: TimerState): TimerState => {
   const nextIndex = state.currentIndex + 1;
   if (nextIndex >= state.agenda.length) return state;
 
-  const agenda = recordTransitionTimes(
-    state.agenda,
-    state.currentIndex,
-    nextIndex,
-    now,
-    state.isRunning,
-  );
+  const agenda = [...state.agenda];
   const nextItem = agenda[nextIndex];
 
   return {
@@ -134,20 +82,11 @@ export const moveToNextItem = (state: TimerState, now: number): TimerState => {
   };
 };
 
-export const moveToPreviousItem = (
-  state: TimerState,
-  now: number,
-): TimerState => {
+export const moveToPreviousItem = (state: TimerState): TimerState => {
   const prevIndex = state.currentIndex - 1;
   if (prevIndex < 0) return state;
 
-  const agenda = recordTransitionTimes(
-    state.agenda,
-    state.currentIndex,
-    prevIndex,
-    now,
-    state.isRunning,
-  );
+  const agenda = [...state.agenda];
   const prevItem = agenda[prevIndex];
 
   return {
@@ -162,18 +101,11 @@ export const moveToPreviousItem = (
 export const jumpToIndex = (
   state: TimerState,
   index: number,
-  now: number,
   options?: { isRunning?: boolean },
 ): TimerState => {
   if (index < 0 || index >= state.agenda.length) return state;
 
-  const agenda = recordTransitionTimes(
-    state.agenda,
-    state.currentIndex,
-    index,
-    now,
-    Boolean(options?.isRunning),
-  );
+  const agenda = [...state.agenda];
   const target = agenda[index];
 
   return {

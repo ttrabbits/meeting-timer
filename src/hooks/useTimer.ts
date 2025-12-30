@@ -100,8 +100,7 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
   }, [state.agenda, state.currentIndex]);
 
   const toggle = useCallback(() => {
-    const now = Date.now();
-    setState((prev) => toggleRunning(prev, now));
+    setState((prev) => toggleRunning(prev));
   }, []);
 
   const reset = useCallback(() => {
@@ -109,9 +108,8 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
   }, []);
 
   const nextItem = useCallback(() => {
-    const now = Date.now();
     setState((prev) => {
-      const nextState = moveToNextItem(prev, now);
+      const nextState = moveToNextItem(prev);
       lastDurationRef.current =
         nextState.agenda[nextState.currentIndex]?.durationSeconds ?? null;
       return nextState;
@@ -119,9 +117,8 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
   }, []);
 
   const prevItem = useCallback(() => {
-    const now = Date.now();
     setState((prev) => {
-      const nextState = moveToPreviousItem(prev, now);
+      const nextState = moveToPreviousItem(prev);
       lastDurationRef.current =
         nextState.agenda[nextState.currentIndex]?.durationSeconds ?? null;
       return nextState;
@@ -129,9 +126,8 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
   }, []);
 
   const goToItem = useCallback((index: number) => {
-    const now = Date.now();
     setState((prev) => {
-      const nextState = jumpToIndex(prev, index, now, { isRunning: false });
+      const nextState = jumpToIndex(prev, index, { isRunning: false });
       lastDurationRef.current =
         nextState.agenda[nextState.currentIndex]?.durationSeconds ?? null;
       return nextState;
@@ -139,9 +135,8 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
   }, []);
 
   const startItem = useCallback((index: number) => {
-    const now = Date.now();
     setState((prev) => {
-      const nextState = jumpToIndex(prev, index, now, { isRunning: true });
+      const nextState = jumpToIndex(prev, index, { isRunning: true });
       lastDurationRef.current =
         nextState.agenda[nextState.currentIndex]?.durationSeconds ?? null;
       return nextState;

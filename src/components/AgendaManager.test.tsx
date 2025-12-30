@@ -28,7 +28,9 @@ describe('AgendaManager の追加処理', () => {
     { id: '1', title: 'A', durationSeconds: 300 },
   ];
 
-  const renderManager = (overrides: Partial<React.ComponentProps<typeof AgendaManager>> = {}) => {
+  const renderManager = (
+    overrides: Partial<React.ComponentProps<typeof AgendaManager>> = {},
+  ) => {
     const props: React.ComponentProps<typeof AgendaManager> = {
       agenda: initialAgenda,
       currentIndex: 0,
@@ -55,8 +57,12 @@ describe('AgendaManager の追加処理', () => {
     renderManager({ onUpdate });
 
     await user.type(screen.getByTestId('agenda-add-title'), 'New Topic');
-    fireEvent.change(screen.getByTestId('agenda-add-minutes'), { target: { value: '6' } });
-    fireEvent.change(screen.getByTestId('agenda-add-seconds'), { target: { value: '30' } });
+    fireEvent.change(screen.getByTestId('agenda-add-minutes'), {
+      target: { value: '6' },
+    });
+    fireEvent.change(screen.getByTestId('agenda-add-seconds'), {
+      target: { value: '30' },
+    });
 
     await user.click(screen.getByTestId('agenda-add-submit'));
 
