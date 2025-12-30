@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Pause, Play, X, Clock } from 'lucide-react';
+import { GripVertical, Pause, Play, X, Clock, FileText } from 'lucide-react';
 
 import type { AgendaItem } from '@/types/timer';
 import { Button } from '@/components/ui/button';
@@ -102,8 +102,8 @@ export const AgendaItemCard: React.FC<AgendaItemCardProps> = ({
       >
         <X className="h-4 w-4" />
       </button>
-      <CardContent className="p-4 pr-12 flex gap-3 items-center">
-        <div className="flex items-center gap-2">
+      <CardContent className="p-3 pr-8 flex gap-3 items-center">
+        <div className="flex items-center gap-1 shrink-0">
           <Button
             variant="ghost"
             size="icon"
@@ -145,10 +145,11 @@ export const AgendaItemCard: React.FC<AgendaItemCardProps> = ({
           </Button>
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 pr-4">
+        <div className="flex-1 min-w-0 flex flex-col gap-2">
+          <div className="flex items-center gap-2 pr-4 text-xs text-zinc-400">
+            <FileText className="h-4 w-4" />
             <Input
-              className={`h-9 px-3 border border-transparent bg-black/30 text-sm font-semibold focus-visible:ring-1 focus-visible:ring-blue-500/40 placeholder:text-zinc-500 truncate ${
+              className={`h-8 px-3 border border-zinc-800 bg-zinc-950/60 text-sm font-semibold focus-visible:ring-1 focus-visible:ring-blue-500/40 placeholder:text-zinc-500 truncate ${
                 isActive ? 'text-white' : 'text-zinc-200'
               }`}
               data-testid="agenda-item-title"
@@ -158,68 +159,70 @@ export const AgendaItemCard: React.FC<AgendaItemCardProps> = ({
                 if (inputsDisabled) return;
                 onEditTitle(item.id, e.target.value);
               }}
-              placeholder="議題名..."
+              placeholder="予定のタイトルを入力..."
               onPointerDown={(e) => e.stopPropagation()}
               onFocus={() => onSetEditing(true)}
               onBlur={() => onSetEditing(false)}
             />
           </div>
 
-          <div className="flex items-center gap-2 mt-2 pr-4">
-            <div className="inline-flex items-center gap-1.5 px-3 py-2 bg-black/30 rounded-lg border border-zinc-800/70">
-              <Clock className="h-4 w-4 text-zinc-500" />
-              <Input
-                type="number"
-                min="0"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                className={`spinless-number w-14 h-8 px-2 bg-zinc-950/60 border-zinc-800 text-center focus-visible:ring-1 focus-visible:ring-blue-500/40 font-mono text-sm ${
-                  isActive ? 'text-blue-200' : 'text-zinc-300'
-                }`}
-                data-testid="agenda-item-minutes"
-                value={Math.floor(item.durationSeconds / 60)}
-                disabled={inputsDisabled}
-                onKeyDown={blockNonNumericKeys}
-                onChange={(e) =>
-                  onEditTime(
-                    item.id,
-                    item.durationSeconds,
-                    'min',
-                    parseNonNegative(e.target.value),
-                  )
-                }
-                onPointerDown={(e) => e.stopPropagation()}
-                onFocus={() => onSetEditing(true)}
-                onBlur={() => onSetEditing(false)}
-              />
-              <span className="text-[11px] font-medium text-zinc-500">分</span>
-              <Input
-                type="number"
-                min="0"
-                max="59"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                className={`spinless-number w-14 h-8 px-2 bg-zinc-950/60 border-zinc-800 text-center focus-visible:ring-1 focus-visible:ring-blue-500/40 font-mono text-sm ${
-                  isActive ? 'text-blue-200' : 'text-zinc-300'
-                }`}
-                data-testid="agenda-item-seconds"
-                value={item.durationSeconds % 60}
-                disabled={inputsDisabled}
-                onKeyDown={blockNonNumericKeys}
-                onChange={(e) =>
-                  onEditTime(
-                    item.id,
-                    item.durationSeconds,
-                    'sec',
-                    parseNonNegative(e.target.value),
-                  )
-                }
-                onPointerDown={(e) => e.stopPropagation()}
-                onFocus={() => onSetEditing(true)}
-                onBlur={() => onSetEditing(false)}
-              />
-              <span className="text-[11px] font-medium text-zinc-500">秒</span>
-            </div>
+          <div className="flex items-center gap-2 pr-4 text-xs text-zinc-400">
+            <Clock className="h-4 w-4" />
+            <Input
+              type="number"
+              min="0"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              className={`spinless-number w-14 h-8 px-2 bg-zinc-950/60 border border-zinc-800 text-center focus-visible:ring-1 focus-visible:ring-blue-500/40 font-mono text-sm ${
+                isActive ? 'text-blue-200' : 'text-zinc-300'
+              }`}
+              data-testid="agenda-item-minutes"
+              value={Math.floor(item.durationSeconds / 60)}
+              disabled={inputsDisabled}
+              onKeyDown={blockNonNumericKeys}
+              onChange={(e) =>
+                onEditTime(
+                  item.id,
+                  item.durationSeconds,
+                  'min',
+                  parseNonNegative(e.target.value),
+                )
+              }
+              onPointerDown={(e) => e.stopPropagation()}
+              onFocus={() => onSetEditing(true)}
+              onBlur={() => onSetEditing(false)}
+            />
+            <span className="text-[11px] font-medium text-zinc-500 px-1">
+              分
+            </span>
+            <Input
+              type="number"
+              min="0"
+              max="59"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              className={`spinless-number w-14 h-8 px-2 bg-zinc-950/60 border border-zinc-800 text-center focus-visible:ring-1 focus-visible:ring-blue-500/40 font-mono text-sm ${
+                isActive ? 'text-blue-200' : 'text-zinc-300'
+              }`}
+              data-testid="agenda-item-seconds"
+              value={item.durationSeconds % 60}
+              disabled={inputsDisabled}
+              onKeyDown={blockNonNumericKeys}
+              onChange={(e) =>
+                onEditTime(
+                  item.id,
+                  item.durationSeconds,
+                  'sec',
+                  parseNonNegative(e.target.value),
+                )
+              }
+              onPointerDown={(e) => e.stopPropagation()}
+              onFocus={() => onSetEditing(true)}
+              onBlur={() => onSetEditing(false)}
+            />
+            <span className="text-[11px] font-medium text-zinc-500 px-1">
+              秒
+            </span>
           </div>
         </div>
       </CardContent>

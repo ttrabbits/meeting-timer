@@ -93,8 +93,8 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-zinc-950">
-      <div className="px-4 pt-4 pb-2">
-        <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-gradient-to-r from-zinc-900/80 via-zinc-900/60 to-zinc-900/80 px-4 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.4)]">
+      <div className="px-3 pt-3 pb-1">
+        <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-gradient-to-r from-zinc-900/80 via-zinc-900/60 to-zinc-900/80 px-3 py-2.5 shadow-[0_10px_20px_rgba(0,0,0,0.35)]">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-full bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
               <Clock className="h-4.5 w-4.5 text-blue-200" />
@@ -111,7 +111,7 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
       </div>
 
       <div
-        className="flex-1 overflow-y-auto px-4 pb-4 pt-2 space-y-3 custom-scrollbar"
+        className="flex-1 overflow-y-auto px-3 pb-3 pt-1 space-y-2 custom-scrollbar"
         data-testid="agenda-list"
       >
         <AgendaList
@@ -129,7 +129,7 @@ export const AgendaManager: React.FC<AgendaManagerProps> = ({
         />
       </div>
 
-      <div className="p-4 bg-zinc-950/90 backdrop-blur-md border-t border-zinc-900 space-y-3 shadow-[0_-10px_20px_rgba(0,0,0,0.45)]">
+      <div className="p-3 bg-zinc-950/90 backdrop-blur-md border-t border-zinc-900 space-y-2.5 shadow-[0_-8px_18px_rgba(0,0,0,0.4)]">
         <AgendaAddForm
           title={newTitle}
           minutes={newMinutes}
