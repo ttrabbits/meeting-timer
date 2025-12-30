@@ -92,7 +92,9 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
       lastDurationRef.current !== currentItem.durationSeconds
     ) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- agenda変更に合わせて即座に状態を同期する必要があるため
-      setState((prev) => syncCurrentDuration(prev, currentItem.durationSeconds));
+      setState((prev) =>
+        syncCurrentDuration(prev, currentItem.durationSeconds),
+      );
     }
     lastDurationRef.current = currentItem.durationSeconds;
   }, [state.agenda, state.currentIndex]);

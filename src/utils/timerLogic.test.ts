@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TimerState } from '@/types/timer';
-import {
-  moveToNextItem,
-  moveToPreviousItem,
-  tickTimer,
-} from './timerLogic';
+import { moveToNextItem, moveToPreviousItem, tickTimer } from './timerLogic';
 
 const createState = (overrides: Partial<TimerState> = {}): TimerState => ({
   agenda: [
