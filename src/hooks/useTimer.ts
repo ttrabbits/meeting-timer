@@ -19,7 +19,11 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
     const playBell = useCallback(() => {
         if (!state.isSoundEnabled) return;
         try {
-            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            const { webkitAudioContext } = window as Window & {
+                webkitAudioContext?: typeof AudioContext;
+            };
+            const AudioContextClass = window.AudioContext ?? webkitAudioContext;
+            if (!AudioContextClass) return;
             const audioCtx = new AudioContextClass();
 
             // ベルのような金属音を作る
@@ -84,6 +88,7 @@ export const useTimer = (initialAgenda: AgendaItem[]) => {
         if (!currentItem) return;
 
         if (lastDurationRef.current !== null && lastDurationRef.current !== currentItem.durationSeconds) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- agenda変更に合わせて即座に状態を同期する必要があるため
             setState((prev) => ({
                 ...prev,
                 remainingSeconds: currentItem.durationSeconds,

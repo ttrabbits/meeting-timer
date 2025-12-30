@@ -120,7 +120,11 @@ const SortableAgendaCard: React.FC<SortableAgendaCardProps> = ({
                             }`}
                         onClick={(e) => {
                             e.stopPropagation();
-                            isActive ? onToggle() : onStart(index);
+                            if (isActive) {
+                                onToggle();
+                            } else {
+                                onStart(index);
+                            }
                         }}
                         onPointerDown={(e) => e.stopPropagation()}
                     >
