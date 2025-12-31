@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useRef } from 'react';
+
 import { useTimer } from './hooks/useTimer';
 import { TimerDisplay } from './components/TimerDisplay';
 import { TimerControls } from './components/TimerControls';
@@ -5,6 +7,7 @@ import { AgendaManager } from './components/AgendaManager';
 import { Button } from '@/components/ui/button';
 import { BellRing } from 'lucide-react';
 import { formatWallTime } from './utils/timeFormat';
+import { buildQueryFromState, parseQueryState } from './utils/queryState';
 
 const DEFAULT_AGENDA = [
   { id: '1', title: 'Aさん', durationSeconds: 5 * 60 },
@@ -13,6 +16,18 @@ const DEFAULT_AGENDA = [
 ];
 
 function App() {
+  const initialState = useMemo(() => {
+    const parsed = parseQueryState(window.location.search);
+    return {
+      agenda:
+        parsed.agenda && parsed.agenda.length > 0
+          ? parsed.agenda
+          : DEFAULT_AGENDA,
+      isSoundEnabled: parsed.isSoundEnabled ?? true,
+      overtimeReminderMinutes: parsed.overtimeReminderMinutes ?? null,
+    };
+  }, []);
+
   const {
     remainingSeconds,
     isRunning,
@@ -30,7 +45,34 @@ function App() {
     reorderAgendaByIndex,
     setOvertimeReminderMinutes,
     playBell,
-  } = useTimer(DEFAULT_AGENDA);
+  } = useTimer(initialState.agenda, {
+    initialSoundEnabled: initialState.isSoundEnabled,
+    initialOvertimeReminderMinutes: initialState.overtimeReminderMinutes,
+  });
+
+  const syncUrlRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (syncUrlRef.current) {
+      window.clearTimeout(syncUrlRef.current);
+    }
+    syncUrlRef.current = window.setTimeout(() => {
+      const query = buildQueryFromState({
+        agenda,
+        isSoundEnabled,
+        overtimeReminderMinutes,
+      });
+      const base = window.location.pathname;
+      const nextUrl = query ? `${base}?${query}` : base;
+      window.history.replaceState({}, '', nextUrl);
+    }, 200);
+
+    return () => {
+      if (syncUrlRef.current) {
+        window.clearTimeout(syncUrlRef.current);
+      }
+    };
+  }, [agenda, isSoundEnabled, overtimeReminderMinutes]);
 
   const hasPrev = currentIndex > 0;
   const hasMore = currentIndex < agenda.length - 1;

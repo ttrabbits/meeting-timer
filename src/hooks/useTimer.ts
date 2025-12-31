@@ -12,14 +12,22 @@ import {
 } from '@/utils/timerLogic';
 import type { AgendaItem, TimerState } from '@/types/timer';
 
-export const useTimer = (initialAgenda: AgendaItem[]) => {
+type UseTimerOptions = {
+  initialSoundEnabled?: boolean;
+  initialOvertimeReminderMinutes?: number | null;
+};
+
+export const useTimer = (
+  initialAgenda: AgendaItem[],
+  options: UseTimerOptions = {},
+) => {
   const [state, setState] = useState<TimerState>({
     agenda: initialAgenda,
     currentIndex: 0,
     remainingSeconds: initialAgenda[0]?.durationSeconds || 0,
     isRunning: false,
-    isSoundEnabled: true,
-    overtimeReminderMinutes: null,
+    isSoundEnabled: options.initialSoundEnabled ?? true,
+    overtimeReminderMinutes: options.initialOvertimeReminderMinutes ?? null,
     hasOvertimeReminderPlayed: false,
   });
 
